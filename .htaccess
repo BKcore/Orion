@@ -1,0 +1,8 @@
+AddType x-mapp-php5 .php
+
+# ErrorDocument 404 /404\.html
+
+RewriteEngine on
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ /dev/index.php [QSA,L]
