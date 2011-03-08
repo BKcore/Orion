@@ -5,4 +5,4 @@ AddType x-mapp-php5 .php
 RewriteEngine on
 
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ /dev/index.php [QSA,L]
+RewriteRule ^(.*)$ /index.php [QSA,L]
