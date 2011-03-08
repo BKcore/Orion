@@ -1,10 +1,10 @@
 #Orion PHP5 Framework
 
-* [Author]Thibaut Despoulain
 * [Website](http://bkcore.com)
 * [Documentation](http://bkcore.com)
-* [Version] 0.2.11-alpha1
-* [License] BSD 4-clauses
+* Author: Thibaut Despoulain
+* Version: 0.2.11-alpha1
+* License: BSD 4-clauses
 
 ##Warning
 
