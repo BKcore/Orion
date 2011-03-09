@@ -41,4 +41,32 @@ abstract class OrionConfig
         $this->data[$key] = $value;
     }
 }
+
+/**
+ * Orion menu entry subclass.
+ * This class can be used to create a menu entry in the configuration files.
+ *
+ * @author Thibaut Despoulain
+ * @license BSD 4-clauses
+ * @version 0.2.11
+ */
+class OrionMenuEntry
+{
+    public $text;
+    public $module;
+    public $route;
+
+    /**
+     * Creates a new menu entry for the configuration file
+     * @param string $_text Link text
+     * @param string $_module Module url wih the extension (ex: home.o)
+     * @param string $_route Extra routing (ex: /page/2)
+     */
+    public function  __construct($_text, $_module, $_route='')
+    {
+        $this->text = $_text;
+        $this->module = $_module;
+        $this->route = $_route;
+    }
+}
 ?>
