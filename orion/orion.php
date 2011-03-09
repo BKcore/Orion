@@ -264,6 +264,7 @@ class Orion
         $array['module']['name'] = self::$MODULE->getName();
         $array['module']['path'] = OrionContext::getModulePath();
         $array['module']['url'] = OrionContext::getModuleURL(self::$MODULE->getName());
+        $array['module']['uri'] = self::$MODULE->getName().OrionContext::$MODULE_EXT;
         $array['template'] = array();
         $array['template']['name'] = self::$MODULE->getTemplate();
         $array['template']['path'] = OrionContext::getTemplatePath(self::$MODULE->getTemplate());
@@ -272,6 +273,7 @@ class Orion
             $array['menu'] = self::$CONFIG->get(strtoupper(self::getMode()) . '_MENU');
         $array['title'] = self::$CONFIG->get('SITE_NAME');
         $array['baseurl'] = self::$CONFIG->get('BASE_URL');
+        $array['mode'] = self::$MODE;
 
         return $array;
     }
