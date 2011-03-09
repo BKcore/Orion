@@ -68,13 +68,18 @@ class MainConfig extends OrionConfig
         $this->set('ADMIN_TEMPLATE', 'orion-admin');
 
         // Modes default menus
-        $this->set('DEFAULT_MENU', array('home'       => 'Home'
-                                        ,'login'      => 'Login'
-										,'labs'		  => 'Labs (WIP)'));
+        $this->set('DEFAULT_MENU', array(new OrionMenuEntry('About me', 'about.o')
+                                        ,new OrionMenuEntry('Labs', 'labs.o')
+                                        ,new OrionMenuEntry('Portfolio', 'portfolio.o')
+                                        ,new OrionMenuEntry('Contact', 'contact.o')));
 
         // Modes default menus
-        $this->set('ADMIN_MENU', array('home'         => 'Home'
-									  ,'labs'		  => 'Labs (WIP)'));
+        $this->set('ADMIN_MENU', array(new OrionMenuEntry('Edit home page', 'home.a')
+                                      ,new OrionMenuEntry('Edit about page', 'about.a')
+                                      ,new OrionMenuEntry('Manage labs', 'labs.a')
+                                      ,new OrionMenuEntry('Manage portfolio', 'portfolio.a')
+                                      ,new OrionMenuEntry('View website', 'home.o')
+                                      ,new OrionMenuEntry('Log out', 'login.o', '/logout')));
     }
 }
 ?>
