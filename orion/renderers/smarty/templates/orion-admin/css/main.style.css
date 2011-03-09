@@ -52,7 +52,9 @@ input
 	border: 1px solid #999999;
 	padding-left: 10px;
 	padding-right: 10px;
-	height: 30px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	height: 22px;
 	background-position: 0px 0px;
 	font-size: 14px;
 	font-weight: bold;
@@ -119,53 +121,83 @@ label
 {
 	color: #A60000;
 }
-.main-col
+.col
 {
-	clear:left;
-	float:left;
+	display:table-cell;
 	margin:0;
 	padding:0;
-	position:relative;
-	left:50%;
-	text-align:center;
-}
-.main-col .col
-{
-	display:block;
-	float:left;
-	list-style:none;
-	margin:0;
-	padding:0;
-	position:relative;
-	right:50%;
 }
 .vmenu
 {
-	width: 210px;
+	width: 200px;
+	background: #ddd;
 }
 .vmenu ul
 {
-	background-color: #f3f3f3;
-	border: 1px solid #999999;
 	width: 200px;
-	margin-right: 10px;
 	padding: 0;
 	margin: 0;
+	border-top: 1px solid #bbb;
+}
+.vmenu ul li
+{
+	display: block;
+	text-align: left;
+	padding: 0;
+	margin: 0;
+}
+.vmenu ul li a, .vmenu ul li a:link, .vmenu ul li a:active
+{
+	background: none;
+	display: block;
+	padding: 10px;
+	padding-left: 20px;
+	text-decoration: none;
+	color: inherit;
+	font-weight: bold;
+	border-bottom: 1px solid #bbb;
+}
+.vmenu ul li a:hover, .vmenu ul li a:focus
+{
+	background-image: url(sprite.rx.png);
+	background-repeat: repeat-x;
+	background-position: 0px -50px;
+	border-bottom: 1px solid #fff;
+}
+.vmenu ul li a.active, .vmenu ul li a.active:link, .vmenu ul li a.active:active
+{
+	background: #f3f3f3;
+	border-bottom: 1px solid #bbb;
+	cursor: default;
+}
+.vmenu ul li a.active:hover, .vmenu ul li a.active:focus
+{
+	background: #f3f3f3;
+	border-bottom: 1px solid #bbb;
+	cursor: default;
+}
+.logo
+{
+	height: 150px;
+	text-align: center;
 }
 .content
 {
 	background-color: #f3f3f3;
-	border: 1px solid #999999;
-	width: 500px;
-	margin: 10px;
+	border-left: 1px solid #999999;
+	width: 600px;
 	padding: 0;
 	text-align: left;
+	padding-bottom: 10px;
+}
+.content h1, .content h2
+{
+	text-align: center;
 }
 .form input, .form textarea, .form label
 {
-	width: 91%;
+	width: 557px;
 	margin-left: 10px;
-	margin-right: 10px;
 }
 
 
@@ -202,9 +234,11 @@ body
 /* PAGE */
 #main 
 {
-	width: auto;
+	width: 800px;
 	margin: auto;
-	padding-top: 10px;
+	margin-top: 10px;
+	background-color: #f3f3f3;
+	border: 1px solid #999999;
 }
 #content
 {

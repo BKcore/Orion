@@ -10,7 +10,19 @@
 	<div id="wrapper" class="hsprite">
 		<div id="header"><h1 class='title'>Orion administration</h1></div>
         <div id="main">
-			<div id="content">
+				<div class="vmenu col">
+					<div class="logo">Orion</div>
+					<ul>
+                    {foreach $orion.menu as $item}
+                        {if $item->module eq $orion.module.uri}
+                            <li><a class="active" href="{$orion.baseurl}{$item->module}{$item->route}">{$item->text}</a></li>
+                        {else}
+                            <li><a href="{$orion.baseurl}{$item->module}{$item->route}">{$item->text}</a></li>
+                        {/if}
+                    {/foreach}
+					</ul>
+				</div>
+				<div class="content col">
                 {block name=body}{/block}
 			</div>
         </div>
