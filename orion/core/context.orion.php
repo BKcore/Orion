@@ -165,7 +165,16 @@ class OrionContext
     }
 
     /**
-     * Get module's url
+     * Get current module's relative URI (ex: 'home.o')
+     * @return string
+     */
+    public static function getModuleURI()
+    {
+        return self::$MODULE_NAME.self::$MODULE_EXT;
+    }
+
+    /**
+     * Get module's complete url
      * @param string $module Module name, if NULL, returns current module's URL
      * @return string
      */
@@ -174,7 +183,7 @@ class OrionContext
         if(is_null($module))
             return Orion::config()->get('BASE_URL') . self::$MODULE_NAME . self::$MODULE_EXT;
         else
-            return Orion::config()->get('BASE_URL') . Orion::module()->getName() . self::$MODULE_EXT;
+            return Orion::config()->get('BASE_URL') . $module . self::$MODULE_EXT;
     }
 
     /**
@@ -183,7 +192,7 @@ class OrionContext
      */
     public static function getModulePath()
     {
-        return Orion::base().Orion::MODULE_PATH.Orion::module()->getName().'/';
+        return Orion::base().Orion::MODULE_PATH.self::$MODULE_NAME.'/';
     }
 
     /**
