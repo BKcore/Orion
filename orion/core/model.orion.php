@@ -225,7 +225,7 @@ abstract class OrionModel
      */
     protected function link($model, $leftfield, $rightfield, $rightfield_label)
     {
-        $this->_LINKS[$model] = new OrionModelLink($model, $leftfield, $rightfield, $rightfield_label);
+        $this->_LINKS[$leftfield] = new OrionModelLink($model, $leftfield, $rightfield, $rightfield_label);
     }
 
     /**
@@ -293,6 +293,21 @@ abstract class OrionModel
 
 
         return $this->_RESULT;
+    }
+
+    /**
+     * Retreive model object from POST var
+     * @return Object
+     */
+    public function fetchPostData()
+    {
+        $class = $this->_CLASS;
+        $object = new $class();
+
+        foreach(array_keys($this->_FIELDS) as $field)
+            if(isset($_POST[$field])) $object->{$field} = $_POST[$field];
+
+        return $object;
     }
 
     /**
@@ -620,6 +635,9 @@ abstract class OrionModel
         return $query;
     }
 
+    /**
+     * Resets current model
+     */
     public function flush()
     {
         $this->_COLUMNS = array();
@@ -630,6 +648,7 @@ abstract class OrionModel
         $this->_MWHERE=null;
         $this->_ORDER = array();
         $this->_LIMIT=null;
+        $this->_LINKS=array();
         $this->_OFFSET=null;
         $this->_TABLE=null;
         $this->_TYPE=null;
@@ -639,6 +658,11 @@ abstract class OrionModel
         $this->_RESULT=null;
     }
 
+    /**
+     * Escapes string for mysql usage ('\\', "\0", "\n", "\r", "'", '"', "\x1a")
+     * @param string $inp
+     * @return string
+     */
     protected function escape($inp)
     {
         if(is_array($inp))
@@ -761,7 +785,7 @@ abstract class OrionModel
     }
 
     /**
-     * Retrive all fields
+     * Retreive all fields
      */
     public function getFields()
     {
@@ -769,13 +793,33 @@ abstract class OrionModel
     }
 
     /**
-     * Retrive corresponding OrionModelField
-     * @param string $name
+     * Retreive corresponding OrionModelField
+     * @param string $field
      * @return OrionModelField
      */
-    public function getField($name)
+    public function getField($field)
     {
-        return $this->_FIELDS[$name];
+        return $this->_FIELDS[$field];
+    }
+
+    /**
+     * Retreive linked field
+     * @param string $field
+     * @return OrionModelLink
+     */
+    public function getLink($field)
+    {
+        return $this->_LINKS[$field];
+    }
+
+    /**
+     * Check wether a field is linked to another model
+     * @param string $name
+     * @return boolean
+     */
+    public function isLinked($field)
+    {
+        return array_key_exists($field, $this->_LINKS);
     }
 
     /**
@@ -830,7 +874,7 @@ abstract class OrionModel
 
     /**
      * Returns a standard OrionModelField List type with arguments as values
-     * @var mixed... List values
+     * @param mixed... List values
      * @return OrionModelField
      * @example $this->bind('listparam', $this->PARAM_LIST('red', 'blue', 'green'));
      */
