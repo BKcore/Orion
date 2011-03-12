@@ -56,6 +56,14 @@ class OrionForm
      * File browse type
      */
     const FILE = 9;
+    /**
+     * Valued list input type
+     */
+    const VALUEDLIST = 10;
+    /**
+     * Submit input type
+     */
+    const SUBMIT = 11;
 
     /**
      * Model handler
@@ -137,9 +145,27 @@ class OrionForm
 
         if($this->model->isPrimary($name))
             $this->fields[$name] = new OrionFormField($name, OrionForm::HIDDEN);
+        elseif($field->type == OrionModel::PARAM_DATE && $field->param == true)
+            return;
         else
-            $this->fields[$name] = new OrionFormField($name, $this->convertModelType($field->type), $legend, $field->param, $required);
-
+        {
+            if($this->model->isLinked($name))
+            {
+                $linkedfield = $this->model->getLink($name);
+                $linkedmodel = $linkedfield->model;
+                $ch = new $linkedmodel();
+                $data = $ch->select($linkedfield->rightfield, $linkedfield->rightfield_label)->order($linkedfield->rightfield_label, OrionModel::ASCENDING)->fetchAll();
+                $param = array();
+                foreach($data as $item)
+                    $param[$item->{$linkedfield->rightfield}] = $item->{$linkedfield->rightfield_label};
+                $this->fields[$name] = new OrionFormField($name, OrionForm::VALUEDLIST, $legend, $param, $required);
+                $ch->flush();
+            }
+            else
+            {
+                $this->fields[$name] = new OrionFormField($name, $this->convertModelType($field->type), $legend, $field->param, $required);
+            }
+        }
         if(!is_null($required))
             $this->required[] = $name;
     }
@@ -210,6 +236,16 @@ class OrionForm
     public function getModel()
     {
         return $this->model;
+    }
+
+    /**
+     * Get a field
+     * @param string $name
+     * @return OrionFormField
+     */
+    public function &getField($name)
+    {
+        return $this->fields[$name];
     }
 
     /**
@@ -327,8 +363,21 @@ class OrionFormField
             break;
 
             case OrionForm::FILE:
+            case OrionForm::IMAGE:
                 return '<label for="'.$this->name.'">'.$this->legend.'</label>'.NEWLINE
                       .'<input type="file" name="'.$this->name.'" value="'.$this->value.'"'.$tag.'>';
+            break;
+
+            case OrionForm::VALUEDLIST:
+                $tmp = '<label for="'.$this->name.'">'.$this->legend.'</label><select name="'.$this->name.'">'.NEWLINE;
+                foreach($this->param as $val => $item)
+                    $tmp .= '<option value="'.$val.'"'. ($this->value == $val ? ' selected="selected"' : '') .'>'.$item.'</option>'.NEWLINE;
+                $tmp .= '</select>';
+                return $tmp;
+            break;
+
+            case OrionForm::SUBMIT:
+                return '<input type="submit" class="form-submit" name="'.$this->name.'" value="'.$this->value.'"'.$tag.'>';
             break;
 
             default:
