@@ -40,7 +40,7 @@ class LabsModule extends OrionModule
         try {
             $ph = new PostHandler();
             $posts = $ph->select()
-                        ->offset(0)
+                        ->offset($offset)
                         ->limit($this->perpage+1) // * see below
                         ->fetchAll();
 

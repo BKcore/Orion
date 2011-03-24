@@ -11,8 +11,8 @@ class TagHandler extends OrionModel
     {
         $this->bindTable('bkcore_labs_tags');
         $this->bindClass('Tag');
-        $this->bind('name', $this->PARAM_STR(255), true);
-        $this->bind('counter', $this->PARAM_INT());
+        $this->bind('name', $this->PARAM_STR(40), 'Tag', true);
+        $this->bind('counter', $this->PARAM_INT(), 'Counter');
     }
 }
 ?>

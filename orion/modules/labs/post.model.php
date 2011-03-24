@@ -23,11 +23,11 @@ class PostHandler extends OrionModel
     public function bindAll()
     {
         $this->bindTable('bkcore_labs_posts');
-        $this->bindClass('Item');
+        $this->bindClass('Post');
         $this->bind('id', $this->PARAM_ID(), 'Identifier', true);
         $this->bind('title', $this->PARAM_STR(255), 'Title');
-        $this->bind('url', $this->PARAM_STR(100), 'URL tag');
-        $this->bind('tags', $this->PARAM_TAGS(' ', 'TagHandler'), 'Tags');
+        $this->bind('url', $this->PARAM_STR(100), 'Url tag');
+        $this->bind('tags', $this->PARAM_TAGS(' ', 'TagHandler', 'name', 'counter'), 'Tags');
         $this->bind('date', $this->PARAM_DATE(true), 'Date');
         $this->bind('category', $this->PARAM_ID(), 'Category');
         $this->bind('intro', $this->PARAM_TEXT(400), 'Introduction');
