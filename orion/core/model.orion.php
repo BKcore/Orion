@@ -9,7 +9,18 @@
 abstract class OrionModel
 {
     const DEBUG = false;
-
+	
+	/**
+	 * Slug used to alias joined fields in JOIN queries to ease object conversion in SELECT queries.<br />
+	 * ie: A valid alias should look like : L_FIELD_SLUG . $fieldlink . L_FIELD_SEP . $fieldname<br />
+	 * With $fieldlink, the name of the field usef for linkage and $fieldname the joined field.
+	 */
+	const L_FIELD_SLUG = 'linkedfield_';
+	/**
+	 * Alias separator for JOIN queries.
+	 * See L_FIELD_SLUG
+	 */
+	const L_FIELD_SEP = '__';
     /**
      * Bind function parameter : Integer
      */
@@ -97,10 +108,19 @@ abstract class OrionModel
     /**
      * Manual where clause placeholder. Used for complex where clauses.
      * <p><b>Be careful when using manual where clause because the string is not parsed, nor escaped. It is ut in the query 'AS IS'.</b></p>
-     * @example "(id = 1 OR id = 2) AND author LIKE 'Ja%'" is a complex where clause defined manually
      * @var string string the complete where clause, without the WHERE keyword
      */
     private $_MWHERE=null;
+    /**
+     * AND where clause placeholder
+     * @var string AND where clause
+     */
+    private $_AWHERE=array();
+    /**
+     * OR where clause placeholder
+     * @var string OR where clause
+     */
+    private $_OWHERE=array();
     /**
      * Order clause placeholder
      * @var array[2]
@@ -127,11 +147,16 @@ abstract class OrionModel
      */
     private $_TYPE=null;
     /**
-     * Join query data
-     * @var array
+     * Joined links
+     * @var array<string> Array of linked fields' name
      */
-    private $_JOIN=null;
-
+    private $_JOIN=array();
+	/**
+	 * Joined fields data. <br />
+	 * <b>The field alias must be internally defined using L_FIELD_SLUG and L_FIELD_SEP</b>
+	 * @var array<array[3]<string>> Each row correspond to a linked field, consisting in an array with [0] being the field name, [1] the field alias and [2] the linked object's class name for object convertion.
+	 */	 
+	private $_JOIN_COLUMNS=array();
     /**
      * Bounded fields placeholder
      * @var arrayMap<string, OrionModelField>
@@ -213,6 +238,7 @@ abstract class OrionModel
     {
         $this->_FIELDS[$name] = $field;
         $this->_FIELDS[$name]->legend = $legend;
+        $this->_FIELDS[$name]->name = $name;
         if($primary_key) array_push($this->_PRIMARY, $name);
     }
 
@@ -238,7 +264,7 @@ abstract class OrionModel
         if(func_num_args() == 0)
             $this->_COLUMNS = array('*');
         else
-            $this->_COLUMNS = $this->mysql_real_escape_array(func_get_args());
+            $this->_COLUMNS = $this->tablePrefixArray($this->escapeArray(func_get_args()), $this->_TABLE);
 
         return $this;
     }
@@ -252,9 +278,11 @@ abstract class OrionModel
         try {
             if($this->_PDO == null)
                 $this->_PDO = OrionSql::getConnection();
-            
+
             $this->_QUERY = $this->_PDO->query($this->getQuery());
             $this->_RESULT = $this->_QUERY->fetchAll(PDO::FETCH_CLASS, $this->_CLASS);
+			
+			if(!empty($this->_JOIN)) $this->parseJoinFieldsArray($this->_RESULT);
         }
         catch(OrionException $e)
         {
@@ -281,6 +309,8 @@ abstract class OrionModel
 
             $this->_QUERY = $this->_PDO->query($this->getQuery());
             $this->_RESULT = $this->_QUERY->fetchObject($this->_CLASS);
+			
+			if(!empty($this->_JOIN)) $this->parseJoinFields($this->_RESULT);
         }
         catch(OrionException $e)
         {
@@ -365,8 +395,8 @@ abstract class OrionModel
     public function &where($field, $comparator=null, $value=null)
     {
         if($comparator == null && $value == null)
-            return $this->mwhere($field);
-        
+            return $this->manualWhere($field);
+
         if(is_null($field) || is_null($comparator) || is_null($value))
             throw new OrionException('Missing argument in where clause', E_USER_WARNING, $this->CLASS_NAME);
 
@@ -379,20 +409,79 @@ abstract class OrionModel
     }
 
     /**
+     * Query chain element, defining AND where clause
+     * @param string $field
+     * @param string $comparator
+     * @param mixed $value <b>If no wildcard should be used, pass this parameter using OrionTools::escapeSql($value).</b> Other standard quotes escapes are done internally.
+     */
+    public function &andWhere($field, $comparator=null, $value=null)
+    {
+        if(is_null($field) || is_null($comparator) || is_null($value))
+            throw new OrionException('Missing argument in AND where clause', E_USER_WARNING, $this->CLASS_NAME);
+
+        $this->_AWHERE[] = array($field, $comparator, $this->format($this->escape($value), $this->_FIELDS[$key]->type));
+
+        return $this;
+    }
+
+    /**
+     * Query chain element, defining AND where clause
+     * @param string $field
+     * @param string $comparator
+     * @param mixed $value <b>If no wildcard should be used, pass this parameter using OrionTools::escapeSql($value).</b> Other standard quotes escapes are done internally.
+     */
+    public function &orWhere($field, $comparator=null, $value=null)
+    {
+        if(is_null($field) || is_null($comparator) || is_null($value))
+            throw new OrionException('Missing argument in OR where clause', E_USER_WARNING, $this->CLASS_NAME);
+
+        $this->_OWHERE[] = array($field, $comparator, $this->format($this->escape($value), $this->_FIELDS[$key]->type));
+
+        return $this;
+    }
+
+    /**
      * Query chain element, defining where clause manualy. Used for complex where clauses
-     * <p><b>Be careful when using manual where clause because the string is not parsed, nor escaped. It is ut in the query 'AS IS'.</b></p>
+     * <p><b>Be careful when using manual where clause because the string is not parsed, nor escaped. It is used in the query 'AS IS'.</b></p>
      * @param string the complete where clause, without the WHERE keyword
      * @example $ph->where("(id = 1 OR id = 2) AND author LIKE 'Ja%'");
      */
-    public function &mwhere($clause)
+    public function &manualWhere($clause)
     {
         if(!is_string($clause))
-            throw new OrionException('Must be a complete where clause', E_USER_WARNING, $this->CLASS_NAME);
+            throw new OrionException('Manual where parameter ['.$clause.'] is not a complete <string> where clause.', E_USER_WARNING, $this->CLASS_NAME);
 
         $this->_MWHERE = $clause;
 
         return $this;
     }
+	
+	/**
+	 * Query chain element, joining provided $fields on $link.
+	 * 
+	 */
+	public function &join($link, $fields, $type='LEFT')
+	{
+		if(!array_key_exists($link, $this->_LINKS))
+			throw new OrionException('Cannot join ['.$link.'], field is not linked in model.', E_USER_WARNING, $this->CLASS_NAME);
+		
+		if($fields == null || !is_array($fields))
+			throw new OrionException('Missing array of joined fields while trying to join on ['.$link.'].', E_USER_WARNING, $this->CLASS_NAME);
+			
+		$jhClass = $this->_LINKS[$link]->model;
+
+		$jh = new $jhClass();
+		
+		// build joined fields array with field aliases 
+		foreach($fields as $field)
+		{
+			$field = $this->escape($field);
+			$this->_JOIN_COLUMNS[] = array($this->tablePrefix($field, $jh->getTable()), self::L_FIELD_SLUG.$link.self::L_FIELD_SEP.$field);
+		}
+		$this->_JOIN[$link] = array($jh->getTable(), $this->escape($type));
+		
+		return $this;
+	}
 
     /**
      * Save provided object into database, checking validity of model constraints.
@@ -407,8 +496,11 @@ abstract class OrionModel
      * }
      * @return boolean
      */
-    public function save($object)
+    public function save($object=null)
     {
+		if($object == null) 
+            throw new OrionException('Cannot save an empty object.', E_USER_WARNING, $this->CLASS_NAME);
+			
         if(empty($this->_FIELDS))
             throw new OrionException('No field bound in model', E_USER_WARNING, $this->CLASS_NAME);
 
@@ -416,6 +508,7 @@ abstract class OrionModel
 
         $keys = array();
         $values = array();
+        $hasTags=false;
 
         foreach($data as $key => $value)
         {
@@ -427,6 +520,9 @@ abstract class OrionModel
 
             array_push($keys, $this->escape($key));
             array_push($values, $this->format($this->escape($value), $this->_FIELDS[$key]->type));
+        
+            if($this->_FIELDS[$key]->type == OrionModel::PARAM_TAGS)
+                $hasTags = true;
         }
 
         $this->_TYPE = 'insert';
@@ -435,9 +531,11 @@ abstract class OrionModel
 
         if($this->_PDO == null)
             $this->_PDO = OrionSql::getConnection();
-        
+
         try {
             $result = $this->_PDO->exec($this->getQuery());
+
+            if($hasTags) $this->saveTags($object);
         }
         catch(OrionException $e)
         {
@@ -465,11 +563,14 @@ abstract class OrionModel
      * }
      * @return boolean
      */
-    public function update($object)
+    public function update($object=null)
     {
+		if($object == null) 
+            throw new OrionException('Cannot update an empty object.', E_USER_WARNING, $this->CLASS_NAME);
+		
         if(empty($this->_FIELDS))
             throw new OrionException('No field bound in model', E_USER_WARNING, $this->CLASS_NAME);
-        
+
         $data = get_object_vars($object);
 
         $sets = array();
@@ -506,11 +607,11 @@ abstract class OrionModel
         $this->_TYPE = 'update';
         $this->_SETS = $sets;
         $this->_LIMIT = 1;
-        $this->mwhere(implode(' AND ', $wheres));
+        $this->manualWhere(implode(' AND ', $wheres));
 
         if($this->_PDO == null)
             $this->_PDO = OrionSql::getConnection();
-        
+
         try {
             $result = $this->_PDO->exec($this->getQuery());
         }
@@ -527,22 +628,34 @@ abstract class OrionModel
     }
 
     /**
-     * Execute a delete action on database
-     * @example // Delete all articles with authors starting with 'Jack'
-     * $ph = new PostHandler();
-     * $ph->where('author', 'LIKE', 'Jack%')->delete();
+     * Execute a delete action on database.
+	 * Must be the last function of a query chain.
      * @return boolean
      */
-    public function delete()
+    public function delete($object=null)
     {
         if(empty($this->_FIELDS))
             throw new OrionException('No field bound in model', E_USER_WARNING, $this->CLASS_NAME);
-        
+			
+		if($object != null)
+		{
+			$wheres = array();
+			foreach($this->_PRIMARY as $key)
+			{
+				if(!isset($object->{$key}) || $object->{$key} == null)
+					throw new OrionException('Primary key ['.$key.'] value not provided in object to delete.', E_USER_WARNING, $this->CLASS_NAME);
+				
+				array_push($wheres, $key.'='.$this->format(OrionTools::escapeSql($this->escape($value))), $this->_FIELDS[$key]->type);
+			}
+			$this->_LIMIT = 1;
+			$this->manualWhere(implode(' AND ', $wheres));
+		}
+
         $this->_TYPE = 'delete';
 
         if($this->_PDO == null)
             $this->_PDO = OrionSql::getConnection();
-        
+
         try {
             $result = $this->_PDO->exec($this->getQuery());
         }
@@ -557,6 +670,45 @@ abstract class OrionModel
 
         return (!($result === false));
     }
+
+	/**
+	 * Parse and save/update tags of model into their respective table (defined with PARAM_TAGS)
+	 * @param object containing the tags fields as attributes
+	 * @return boolean success
+	 */
+	public function saveTags($object)
+	{
+		if(empty($this->_FIELDS))
+            throw new OrionException('No field bound in model', E_USER_WARNING, $this->CLASS_NAME);
+
+		if($this->_PDO == null)
+            $this->_PDO = OrionSql::getConnection();
+
+		foreach($this->_FIELDS as $field)
+		{
+			if($field->type == OrionModel::PARAM_TAGS)
+			{
+				if($object->{$field->name} != null && !empty($object->{$field->name}))
+				{
+					$tags = explode($field->param->separator, $object->{$field->name});
+					$thClass = $field->param->model;
+					$th = new $thClass();
+					$values = "(".implode('),(', $this->formatArray($this->escapeArray($tags))).")";
+					$query = "INSERT INTO ".$this->escape($th->getTable())." (".$this->escape($field->param->namefield).") VALUES ".$values." ON DUPLICATE KEY UPDATE ".$field->param->counterfield."=".$field->param->counterfield."+1;";
+
+					try {
+						$result = $this->_PDO->exec($query);
+					}
+					catch(PDOException $e)
+					{
+						throw new OrionException($e->getMessage(), $e->getCode(), $this->CLASS_NAME);
+					}
+				}
+			}
+		}
+
+		return !empty($tags);
+	}
 
     /**
      * Get current query string
@@ -572,7 +724,19 @@ abstract class OrionModel
         else
         {
             if(!empty($this->_WHERE) && is_array($this->_WHERE))
+            {
                 $where = implode(' ', $this->_WHERE);
+                if(!empty($this->_AWHERE))
+                {
+                    foreach($this->_AWHERE as $andClause)
+                        $where .= ' AND '.implode(' ', $andClause);
+                }
+                if(!empty($this->_OWHERE))
+                {
+                    foreach($this->_OWHERE as $orClause)
+                        $where .= ' OR '.implode(' ', $orClause);
+                }
+            }
             else
                 $where=null;
         }
@@ -581,8 +745,12 @@ abstract class OrionModel
         {
             case 'select':
                 $query = "SELECT ";
-                $query .= implode(', ', $this->tablePrefix($this->_COLUMNS, $this->_TABLE));
+                $query .= implode(', ', $this->_COLUMNS);
+				foreach($this->_JOIN_COLUMNS as $col)
+					$query .= ", ".implode(' AS ', $col);
                 $query .= " FROM ".$this->_TABLE;
+				foreach($this->_JOIN as $key => $data)
+					$query .= " ".strtoupper($data[1])." JOIN ".$data[0]." ON ".$this->tablePrefix($this->_LINKS[$key]->leftfield, $this->_TABLE)."=".$this->tablePrefix($this->_LINKS[$key]->rightfield, $data[0]);
                 if($where != null)
                     $query .= " WHERE ".$where;
                 if(!empty($this->_ORDER))
@@ -631,8 +799,8 @@ abstract class OrionModel
         $this->_QUERY_STRING = $query;
 
         if(self::DEBUG) throw new OrionException('SQL_QUERY: '.$query, E_USER_NOTICE, $this->CLASS_NAME);
- 
-        return $query;
+
+        return $query.';';
     }
 
     /**
@@ -645,6 +813,8 @@ abstract class OrionModel
         $this->_VALUES=null;
         $this->_SETS=null;
         $this->_WHERE = array();
+        $this->_AWHERE = array();
+        $this->_OWHERE = array();
         $this->_MWHERE=null;
         $this->_ORDER = array();
         $this->_LIMIT=null;
@@ -676,30 +846,15 @@ abstract class OrionModel
     }
 
     /**
-     * Add a table prefix to an array of columns (ex: array('a','b') & table1 gives array('table1.a', 'table1.b'))
-     * @param array $array Array of columns
-     * @param string $table The table prefix
-     * @return array
-     */
-    protected function tablePrefix($array, $table)
-    {
-        $tmp = array();
-
-        foreach($array as $element)
-            array_push($tmp, $table.'.'.$element);
-        
-        return $tmp;
-    }
-
-    /**
      * Maps the standard $this->escape to the elements of $array
      * @param array<mixed> $array Array to escape
      * @return array<mixed> Escaped array
      */
-    private function mysql_real_escape_array( $array )
+    protected function escapeArray( $array )
 	{
 		$tmp = array();
-		for($i=0; $i<count($array); $i++)
+		$count = count($array);
+		for($i=0; $i<$count; $i++)
 		{
 			$tmp[$i] = $this->escape($array[$i]);
 		}
@@ -707,6 +862,70 @@ abstract class OrionModel
 		return $tmp;
 	}
 
+	/**
+	 * Add a table prefix to a field name
+	 * @param string $field field name
+	 * @param string $table table name
+	 * @return string prefixed field name
+	 */
+	protected function tablePrefix($field, $table)
+	{
+		return $table.'.'.$field;
+	}
+	
+    /**
+     * Add a table prefix to an array of columns (ex: array('a','b') & table1 gives array('table1.a', 'table1.b'))
+     * @param array $array Array of columns
+     * @param string $table The table prefix
+     * @return array
+     */
+    protected function tablePrefixArray($array, $table)
+    {
+        $tmp = array();
+		$count = count($array);
+		for($i=0; $i<$count; $i++)
+		{
+			$tmp[$i] = $this->tablePrefix($array[$i], $table);
+		}
+
+		return $tmp;
+    }
+
+	/**
+	 * Parse query-resulting object to build linked objects from joined fields' syntax.<br />
+	 * In other words, convert "L_FIELD_SLUG.$linkedfield.L_FIELD_SEP.$fieldname" into linked Object.
+	 */
+	protected function parseJoinFields(&$object)
+	{
+		$lfields = OrionTools::extractArrayKeysStartingWith(get_object_vars($object), self::L_FIELD_SLUG);
+		$l_field_len = strlen(self::L_FIELD_SLUG);
+		foreach($lfields as $key => $value)
+		{
+			$tmp = explode(self::L_FIELD_SEP, substr($key, $l_field_len));
+			$field = $tmp[0];
+			$subfield = $tmp[1];
+			
+			if(!isset($object->{$field}))
+			{
+				$lClass = $this->_LINKS[$field]->model;
+				$object->{$field} = new $lClass();
+			}
+			$object->{$field}->{$subfield} = $value;
+			unset($object->{$key});
+		}
+	}
+	/**
+	 * Array version of parseJoinFields().
+	 */
+	protected function parseJoinFieldsArray(&$array)
+	{
+		$count = count($array);
+		for($i=0; $i<$count; $i++)
+		{
+			$this->parseJoinFields($array[$i]);
+		}
+	}
+	
     /**
      * Test wether $value meets the requirements of corresponging bounded field
      * @param string $key Field name
@@ -720,17 +939,16 @@ abstract class OrionModel
 
         $field = $this->_FIELDS[$key];
 
-        if($field->param == null)
-            $noc = true;
-        else
-            $noc = false;
-        
+        if($value == null) return true; // until required is implemented
+
+        $noc = ($field->param == null);
+
         switch($field->type)
         {
             case self::PARAM_INT:
             case self::PARAM_ID:
-                if($noc) return (is_int($value));
-                else return (is_int($value) && $value >= $field->param[0] && $value <= $field->param[1]);
+                if($noc) return (is_numeric($value));
+                else return (is_numeric($value) && $value >= $field->param->min && $value <= $field->param->max);
             break;
 
             case self::PARAM_STR:
@@ -745,7 +963,7 @@ abstract class OrionModel
             case self::PARAM_LIST:
                 return (in_array($value, $field->param));
             break;
-        
+
             default:
                 return true;
             break;
@@ -758,11 +976,11 @@ abstract class OrionModel
      * @param int $type valid PARAM_<TYPE> constant (see OrionModel consts)
      * @return string SQL value formatted
      */
-    public function format($value, $type)
+    public function format($value, $type=null)
     {
         if($value == null)
             return "''";
-        
+
         switch($type)
         {
             case self::PARAM_INT:
@@ -784,8 +1002,27 @@ abstract class OrionModel
         }
     }
 
+	/**
+     * Maps the standard $this->format to the elements of $array
+     * @param array<mixed> $array Array to format
+	 * @param string $type PARAM_TYPE
+     * @return array<mixed> Escaped array
+     */
+	public function formatArray($array, $type=null)
+	{
+		$tmp = array();
+		$count = count($array);
+		for($i=0; $i<$count; $i++)
+		{
+			$tmp[$i] = $this->format($array[$i], $type);
+		}
+
+		return $tmp;
+	}
+
     /**
      * Retreive all fields
+     * @return array<OrionModelField>
      */
     public function getFields()
     {
@@ -810,6 +1047,15 @@ abstract class OrionModel
     public function getLink($field)
     {
         return $this->_LINKS[$field];
+    }
+
+    /**
+     * Retreive linked table
+     * @return string Table
+     */
+    public function getTable()
+    {
+        return $this->_TABLE;
     }
 
     /**
@@ -840,7 +1086,11 @@ abstract class OrionModel
      */
     protected function PARAM_INT($min=-32768, $max=32767)
     {
-        return new OrionModelField(self::PARAM_INT, array($min, $max));
+		$param = new stdClass();
+		$param->min = $min;
+		$param->max = $max;
+
+        return new OrionModelField(self::PARAM_INT, $param);
     }
 
     /**
@@ -887,7 +1137,7 @@ abstract class OrionModel
     /**
      * Returns a standard OrionModelField Date type
      * @param boolean $current Setting this to TRUE will use NOW() when updating or inserting
-     * @return OrionModelField 
+     * @return OrionModelField
      */
     protected function PARAM_DATE($current=false)
     {
@@ -896,7 +1146,7 @@ abstract class OrionModel
 
     /**
      * Returns a standard OrionModelField ID type
-     * @return OrionModelField 
+     * @return OrionModelField
      */
     protected function PARAM_ID()
     {
@@ -925,9 +1175,14 @@ abstract class OrionModel
      * Returns a standard OrionModelField Tags type
      * @return OrionModelField
      */
-    protected function PARAM_TAGS($separator, $link)
+    protected function PARAM_TAGS($separator, $model, $namefield, $counterfield)
     {
-        return new OrionModelField(self::PARAM_TAGS, array($separator, $link));
+		$param = new stdClass();
+		$param->separator = $separator;
+		$param->model = $model;
+		$param->namefield = $namefield;
+		$param->counterfield = $counterfield;
+        return new OrionModelField(self::PARAM_TAGS, $param);
     }
 
     /**
@@ -949,13 +1204,19 @@ abstract class OrionModel
  */
 class OrionModelField
 {
+	/**
+	 * Unique field name
+	 * @var string
+	 */
+	public $name=null;
+
     /**
      * Must be a valid OrionModel::PARAM_<TYPE> constant
      * @see OrionModel constants
      * @var int
      */
     public $type=null;
-    
+
     /**
      * Type constraints
      * @var mixed
