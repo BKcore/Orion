@@ -90,6 +90,25 @@ class OrionTools
 					str_replace(self::$_SQL_ESCAPED, self::$_SQL_UNESCAPED, $regex));
     }
 
+	/**
+	 * Extract sub array from base array, keeping only keys starting with $pattern
+	 * @param array<string,mixed> $array
+	 * @param string $pattern
+	 * @return array<key, mixed>
+	 */
+	public static function extractArrayKeysStartingWith($array, $pattern)
+	{
+		$out = array();
+		
+		foreach($array as $key => $value)
+		{
+			if(OrionTools::startWith($key, $pattern))
+				$out[$key] = $value;
+		}
+		
+		return $out;
+	}
+	
     /**
      * preg_match shortcut.
      *
