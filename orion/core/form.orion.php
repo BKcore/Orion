@@ -176,10 +176,10 @@ class OrionForm
      */
     public function hydrate($object)
     {
-        foreach($this->fields as $field)
+        foreach(array_keys($this->fields) as $key)
         {
-            if(!is_null($object->{$field->name}))
-                $field->value = $object->{$field->name};
+            if(!is_null($object->{$key}))
+                $this->fields[$key]->value = $object->{$key};
         }
     }
 
