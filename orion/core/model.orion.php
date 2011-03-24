@@ -8,7 +8,7 @@
  */
 abstract class OrionModel
 {
-    const DEBUG = false;
+    const DEBUG = true;
 	
 	/**
 	 * Slug used to alias joined fields in JOIN queries to ease object conversion in SELECT queries.<br />
@@ -592,7 +592,7 @@ abstract class OrionModel
                 if(empty($value))
                     throw new OrionException('Impossible to update. One or more primary field value are missing in update object.', E_USER_WARNING, $this->CLASS_NAME);
 
-                array_push($wheres, $key.'='.$this->format(OrionTools::escapeSql($this->escape($value))), $this->_FIELDS[$key]->type);
+                array_push($wheres, $key.'='.$this->format(OrionTools::escapeSql($this->escape($value)), $this->_FIELDS[$key]->type));
             }
 
             if(!$this->checkConstraints($key, $value))
@@ -798,7 +798,7 @@ abstract class OrionModel
 
         $this->_QUERY_STRING = $query;
 
-        if(self::DEBUG) throw new OrionException('SQL_QUERY: '.$query, E_USER_NOTICE, $this->CLASS_NAME);
+        if(self::DEBUG) echo 'SQL_QUERY: '.$query.'<br />';
 
         return $query.';';
     }
