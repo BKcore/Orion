@@ -87,7 +87,7 @@ class OrionTools
     public static function escapeSql($string)
     {
         return str_replace(self::$_SQL_UNESCAPED, self::$_SQL_ESCAPED,
-					str_replace(self::$_SQL_ESCAPED, self::$_SQL_UNESCAPED, $regex));
+					str_replace(self::$_SQL_ESCAPED, self::$_SQL_UNESCAPED, $string));
     }
 
 	/**
