@@ -3,7 +3,7 @@
 * [Website](http://bkcore.com)
 * [Documentation](http://bkcore.com/orion-doc/)
 * Author: Thibaut Despoulain
-* Version: 0.2.11-alpha1
+* Version: 0.2.11-alpha2
 * License: BSD 4-clauses
 
 ##Warning
