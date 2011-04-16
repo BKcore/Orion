@@ -199,6 +199,11 @@ abstract class OrionModule
         }
     }
 
+    protected function isCached($file, $cache_id=null, $template_id=null)
+    {
+        return $this->tpl->isCached($file, $cache_id, $template_id);
+    }
+
     /**
      * Security function name testing.
      *
