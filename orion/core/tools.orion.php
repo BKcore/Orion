@@ -123,6 +123,26 @@ class OrionTools
     }
 
     /**
+     * Concats an array with $trail after each item (Useful for path and file array to string)
+     * @param string $trail
+     * @param array $array
+     * @param boolean $tolower Should each item be lower case'd ?
+     * @return string
+     */
+    public static function concatWithTrail($trail, $array, $tolower=false)
+    {
+        if($array == null || empty($array))
+            return '';
+        
+        $out = '';
+        foreach($array as $item)
+        {
+            $out .= ($tolower ? strtolower($item) : $item) . $trail;
+        }
+        return $out;
+    }
+
+    /**
      * Test if provided string starts with provided expression.
      *
      * @param String Input to test
