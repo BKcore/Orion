@@ -1,7 +1,7 @@
 <?php
 /**
  * Orion plugin class.
- * Handles static context variables such as URL, Language and more
+ * Handles plugins load and usage
  *
  * @author Thibaut Despoulain
  * @license BSD 4-clauses
