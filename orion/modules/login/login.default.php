@@ -26,7 +26,7 @@ class LoginModule extends OrionModule
         if(OrionAuth::logged())
             OrionContext::redirect(OrionContext::genURL(Orion::config()->get('DEFAULT_LOGGED_PAGE')));
         $this->assign('title', 'Login');
-        $this->displayView('login');
+        $this->renderView('login');
     }
 
     public function _logout()
@@ -34,7 +34,7 @@ class LoginModule extends OrionModule
         OrionAuth::logout();
         $this->assign('type', 'info');
         $this->assign('info', 'Successfully logged out.');
-        $this->displayView('login');
+        $this->renderView('login');
     }
 
     public function _login()
@@ -56,7 +56,7 @@ class LoginModule extends OrionModule
             $this->assign('info', $e->getMessage());
             $this->assign('type', 'error');
         }
-        $this->displayView('login');
+        $this->renderView('login');
     }
 
     public function _error($e)
@@ -72,7 +72,7 @@ class LoginModule extends OrionModule
 
         $this->assign('info', $msg);
         $this->assign('type', 'error');
-        $this->displayView('login');
+        $this->renderView('login');
     }
 }
 ?>

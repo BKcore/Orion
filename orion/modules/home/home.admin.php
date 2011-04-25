@@ -24,7 +24,7 @@ class HomeModule extends OrionModule
         $this->assign('title', 'Home');
         $this->assign('info', "Welcome ".OrionAuth::user()->name." !");
         $this->assign('type', 'info');
-        $this->displayView('home');
+        $this->renderView('home');
     }
 
     public function _error($e)
@@ -36,7 +36,7 @@ class HomeModule extends OrionModule
 
         $this->assign('info', $msg);
         $this->assign('type', 'error');
-        $this->displayView('home');
+        $this->renderView('home');
     }
 }
 ?>
