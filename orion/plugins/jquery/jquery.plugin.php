@@ -1,7 +1,6 @@
 <?php
 /**
  * jQuery plugin class.
- * Handles static context variables such as URL, Language and more
  *
  * @author Thibaut Despoulain
  * @license BSD 4-clauses
@@ -16,6 +15,10 @@ class jQueryPlugin
     private static $TPL = null;
     public static $path;
 
+    /**
+     * Loads and include jQuery js file from google's CDN
+     * @param mixed $args must contain a 'tpl' key with the current template object
+     */
     public static function load(&$args)
     {
         if(!isset($args['tpl']) || $args['tpl'] == null)
@@ -26,6 +29,10 @@ class jQueryPlugin
         self::$TPL->includeJS(self::JQUERY_FILE);
     }
 
+    /**
+     * Adds inline js script to output view. script will be automatically enclosed in document.ready jQuery function.
+     * @param string $script
+     */
     public static function script($script)
     {
         if(self::$TPL == null)
@@ -39,6 +46,10 @@ class jQueryPlugin
         self::$TPL->addJs($script);
     }
 
+    /**
+     * Loads a jQuery sub plugin js file like FancyBox for example
+     * @param string $file
+     */
     public static function loadPlugin($file)
     {
         if(self::$TPL == null)
@@ -49,6 +60,10 @@ class jQueryPlugin
         self::$TPL->includeJS($file);
     }
 
+    /**
+     * Loads a jQuery sub plugin CSS file
+     * @param string $file
+     */
     public static function loadCSS($file)
     {
         if(self::$TPL == null)

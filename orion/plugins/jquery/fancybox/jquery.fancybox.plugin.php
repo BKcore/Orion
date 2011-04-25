@@ -1,7 +1,6 @@
 <?php
 /**
  * jQuery Fancybox plugin class.
- * Handles static context variables such as URL, Language and more
  *
  * @author Thibaut Despoulain
  * @license BSD 4-clauses
@@ -16,6 +15,10 @@ class jQueryFancyBoxPlugin
     const FB_JS = 'assets/jquery.fancybox.js';
     const FB_CSS = 'assets/jquery.fancybox.css';
 
+    /**
+     * Loads FancyBox js/css files and apply fancybox() to a[rel]'s
+     * @param mixed $args
+     */
     public static function load(&$args)
     {
         try{
