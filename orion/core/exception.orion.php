@@ -17,8 +17,8 @@ class OrionException extends Exception
      * @param int $code
      * @param string $caller Caller class' name
      */
-    public function  __construct($message, $code, $caller) {
-        parent::__construct($message, $code);
+    public function  __construct($message='An exception occured', $code=256, $caller=null) {
+        parent::__construct((string)$message, (int)$code);
         $this->classname = $caller;
     }
     
@@ -32,7 +32,7 @@ class OrionException extends Exception
 
             case E_WARNING :
             case E_USER_WARNING :
-                $type = 'Attention';
+                $type = 'Warning';
                 break;
 
             case E_NOTICE :
