@@ -84,6 +84,30 @@ textarea:focus, textarea:active
 	border: 1px solid #999;
 	background-color: #c7d0d9;
 }
+select
+{
+	background-color: #c7d0d9;
+	border: 1px solid #999999;
+	padding-left: 10px;
+	padding-right: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	height: 30px;
+	font-size: 14px;
+	font-weight: bold;
+	color: inherit;
+}
+select option
+{
+	background-color: #c7d0d9;
+	border: 1px solid #999999;
+	line-height: 30px;
+	height: 30px;
+	display: block;
+	font-size: 14px;
+	font-weight: bold;
+	color: inherit;
+}
 label
 {
 	display: block;
@@ -105,22 +129,6 @@ label
 /* END COMPONENTS */
 
 /* PAGE-SPECIFIC */
-.flash
-{
-	display: block;
-	height: 18px;
-	text-align: center;
-	font-weight: bold;
-	overflow: hidden;
-}
-.flash.info
-{
-	color: inherit;
-}
-.flash.error
-{
-	color: #A60000;
-}
 .col
 {
 	display:table-cell;
@@ -174,7 +182,29 @@ label
 {
 	background: #f3f3f3;
 	border-bottom: 1px solid #bbb;
-	cursor: default;
+}
+ul.submenu
+{
+    border: none;
+    border-bottom: 1px solid #bbb;
+    background: #ccc;
+    list-style-type: square;
+}
+ul.submenu li a, ul.submenu li a:link, ul.submenu li a:active
+{
+	background: none;
+	display: block;
+	padding: 2px;
+	padding-left: 36px;
+	text-decoration: none;
+	color: inherit;
+	font-weight: normal;
+    border: none;
+}
+ul.submenu li a:hover, ul.submenu li a:focus
+{
+    background: #ddd;
+	border: none;
 }
 .logo
 {
@@ -199,8 +229,49 @@ label
 	width: 557px;
 	margin-left: 10px;
 }
+.form select
+{
+	width: 579px;
+	margin-left: 10px;
 
-
+}
+.form input.form-submit
+{
+	margin-top: 10px;
+	width: 579px;
+	height: 34px;
+}
+.flash
+{
+    width: 100%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+	font-weight: bold;
+}
+.flash.info
+{
+    background-color: #cfe3b2;
+    border-top: 1px solid #809a6f;
+    border-bottom: 1px solid #809a6f;
+    color: #2d4d00;
+}
+.flash.warning
+{
+    background-color: #edecb8;
+    border-top: 1px solid #968b6d;
+    border-bottom: 1px solid #968b6d;
+    color: #4d3500;
+}
+.flash.error
+{
+    background-color: #e8c4c4;
+    border-top: 1px solid #987575;
+    border-bottom: 1px solid #987575;
+    color: #620000;
+}
 /* END PAGE-SPECIFIC */
 
 /* LAYOUT */

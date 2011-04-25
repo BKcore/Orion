@@ -4,6 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>{block name=title}Index{/block} | Orion administration</title>
 <link type="text/css" rel="stylesheet" href="{$orion.template.abspath}css/main.style.css" />
+	{$template.css}
 </head>
 
 <body>
@@ -16,6 +17,13 @@
                     {foreach $orion.menu as $item}
                         {if $item->module eq $orion.module.uri}
                             <li><a class="active" href="{$orion.baseurl}{$item->module}{$item->route}">{$item->text}</a></li>
+                            {if $submenu neq ""}
+                                <ul class="submenu">
+                                {foreach $submenu as $mitem}
+                                    <li><a href="{$orion.baseurl}{$mitem->module}{$mitem->route}">{$mitem->text}</a></li>
+                                {/foreach}
+                                </ul>
+                            {/if}
                         {else}
                             <li><a href="{$orion.baseurl}{$item->module}{$item->route}">{$item->text}</a></li>
                         {/if}
@@ -27,5 +35,6 @@
 			</div>
         </div>
     </div>
+	{$template.js}
 </body>
 </html>
