@@ -154,14 +154,11 @@ abstract class OrionModule
      * Displays template (shortlink for $this->tpl->display(...)).
      * @deprecated Use displayView() and local views instead
      * @param string $template the resource handle of the template file  or template object
-     * @param mixed $cache_id cache id to be used with this template
-     * @param mixed $compile_id compile id to be used with this template
-     * @param object $parent next higher level of Smarty variables
+     * @param mixed $id cache id to be used with this template
      */
-    protected function display($template, $cache_id=null, $compile_id=null, $parent=null)
+    protected function render($template, $id=null)
     {
-        $this->tpl->assign('orion', Orion::getDataArray());
-        $this->tpl->display($template, $cache_id, $compile_id, $parent);
+        $this->tpl->render($template, $cache_id);
     }
 
     /**
@@ -172,22 +169,15 @@ abstract class OrionModule
      * @param mixed $compile_id compile id to be used with this template
      * @param object $parent next higher level of Smarty variables
      */
-    protected function displayView($view, $cache_id=null, $compile_id=null, $parent=null)
+    protected function renderView($view, $id=null)
     {
         try {
-            $filename = OrionContext::$PATH . Orion::MODULE_PATH . $this->name . '/' . $view . Orion::VIEW_EXT . '.tpl';
+            $filename = OrionContext::$PATH . Orion::MODULE_PATH . $this->name . DIRECTORY_SEPARATOR . $view . Orion::VIEW_EXT . '.tpl';
 
             if(!file_exists($filename))
                 throw new OrionException('View file ['.$filename.'] does not exist.', E_USER_WARNING, $this->name);
 
-            $output = $filename;
-
-            if($this->template != null)
-                $output = 'extends:'.$this->template.Orion::TEMPLATE_EXT.'|'.$output;
-
-
-            $this->tpl->assign('orion', Orion::getDataArray());
-            $this->tpl->display($output, $cache_id, $compile_id, $parent);
+            $this->tpl->renderView($filename, $this->template, $id);
         }
         catch(OrionException $e)
         {
