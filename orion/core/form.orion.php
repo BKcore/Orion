@@ -64,6 +64,14 @@ class OrionForm
      * Submit input type
      */
     const SUBMIT = 11;
+    /**
+     * Cancel button type
+     */
+    const CANCEL = 12;
+    /**
+     * Message type
+     */
+    const MESSAGE = 13;
 
     /**
      * Model handler
@@ -72,7 +80,7 @@ class OrionForm
     private $model=null;
     /**
      * Array of OrionFormFields, used to store form fields as Data Object
-     * @var OrionFormField array
+     * @var array<OrionFormField>
      */
     private $fields=array();
     /**
@@ -206,7 +214,7 @@ class OrionForm
     public function toHtml($XHTML=false)
     {
         $html = '<form name="'.$this->name.'" method="post" action="'.$this->action.'"';
-        if($this->isMultipart)
+        if($this->isMultipart())
              $html.= ' enctype="multipart/form-data"';
         $html .= '>'.NEWLINE;
 
@@ -246,6 +254,14 @@ class OrionForm
     public function &getField($name)
     {
         return $this->fields[$name];
+    }
+
+    public function isMultipart()
+    {
+        foreach($this->fields as $field)
+            if($field->type == self::IMAGE || $field->type == self::FILE)
+                return true;
+        return false;
     }
 
     /**
@@ -378,6 +394,14 @@ class OrionFormField
 
             case OrionForm::SUBMIT:
                 return '<input type="submit" class="form-submit" name="'.$this->name.'" value="'.$this->value.'"'.$tag.'>';
+            break;
+
+            case OrionForm::CANCEL:
+                return '<input type="button" onclick="javascript:history.go(-1);" class="form-submit" name="'.$this->name.'" value="'.$this->value.'"'.$tag.'>';
+            break;
+
+            case OrionForm::MESSAGE:
+                return '<p class="message">'.$this->value.'</p>';
             break;
 
             default:
