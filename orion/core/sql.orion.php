@@ -41,7 +41,7 @@ class OrionSql
 
     /**
     * Return PDO instance or create intitial connection
-    * @return object (PDO)
+    * @return PDO
     * @access public
     */
     public static function getConnection()
@@ -70,6 +70,18 @@ class OrionSql
         }
         return self::$instance;
     }
+	
+	/**
+	 * Manually close the PDO connection to database
+	 * @return boolean success
+	 */
+	public static function disconnect()
+	{
+		if(self::$instance != null)
+			self::$instance = null;
+		
+		return (self::$instance == null);
+	}
 
     /**
     * __clone is set to private, so nobody can clone the instance
