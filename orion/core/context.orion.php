@@ -153,6 +153,16 @@ class OrionContext
     }
 
     /**
+     * Get default mode's extension from configuration file
+     * @return string Extension
+     */
+    public static function getDefaultModeExtension()
+    {
+        $list = Orion::config()->get('MODE_LIST');
+        return $list[Orion::config()->get('DEFAULT_MODE')];
+    }
+
+    /**
      * Get the relative URI (Base URI minus BASE_DIR)
      * @return string The relative URI
      */
@@ -187,22 +197,48 @@ class OrionContext
     }
 
     /**
-     * Get current module's path
+     * Get current module's path (with trailing slash)
      * @return string
      */
     public static function getModulePath()
     {
-        return Orion::base().Orion::MODULE_PATH.self::$MODULE_NAME.'/';
+        return Orion::base().Orion::MODULE_PATH.self::$MODULE_NAME.DIRECTORY_SEPARATOR;
     }
 
     /**
-     * Get the relative path to the provided template folder
+     * Get plugin path (with trailing slash)
+     * @param the plugin folder, if null, returns the global plugins directory path
+     * @return string
+     */
+    public static function getPluginPath($plugin=null)
+    {
+        if($plugin == null)
+            return Orion::base().Orion::PLUGIN_PATH;
+        else
+            return Orion::base().Orion::PLUGIN_PATH . $plugin .DIRECTORY_SEPARATOR;
+    }
+    
+    /**
+     * Get plugin's complete url
+     * @param string $plugin plugin file, if NULL, returns global plugin url
+     * @return string
+     */
+    public static function getPluginURL($plugin=null)
+    {
+        if($plugin == null)
+            return Orion::config()->get('BASE_URL') . Orion::base() . Orion::PLUGIN_PATH;
+        else
+            return Orion::config()->get('BASE_URL') . Orion::base() . Orion::PLUGIN_PATH . $plugin . DIRECTORY_SEPARATOR;
+    }
+
+    /**
+     * Get the relative path to the provided template folder (with trailing slash)
      * @param string $template Template name
      * @return string
      */
     public static function getTemplatePath($template)
     {
-        return Orion::config()->get('TEMPLATE_PATH').$template.'/';
+        return Orion::config()->get('TEMPLATE_PATH').$template.DIRECTORY_SEPARATOR;
     }
 
     /**
@@ -212,7 +248,7 @@ class OrionContext
      */
     public static function getTemplateAbsolutePath($template)
     {
-        return Orion::config()->get('TEMPLATE_ABS_PATH').$template.'/';
+        return Orion::config()->get('TEMPLATE_ABS_PATH').$template.DIRECTORY_SEPARATOR;
     }
 
     /**
@@ -222,7 +258,7 @@ class OrionContext
      */
     public static function getTemplateFilePath($template)
     {
-        return Orion::config()->get('TEMPLATE_PATH').$template.'/'.$template.Orion::TEMPLATE_EXT;
+        return Orion::config()->get('TEMPLATE_PATH').$template.DIRECTORY_SEPARATOR.$template.Orion::TEMPLATE_EXT;
     }
 }
 ?>
