@@ -13,6 +13,11 @@ class OrionPlugin
 
     private static $loaded = array();
 
+    /**
+     * Loads provided plugin and call its load() function with arguments $args
+     * @param string $plugin
+     * @param mixed $args
+     */
     public static function load($plugin, $args=null)
     {
         $plist = explode('.', $plugin);
