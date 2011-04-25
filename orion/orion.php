@@ -5,18 +5,11 @@
  * <p>Orion core classes must be placed in core/ sub directory and
  * respect Orion's class naming convention.<br/>
  * {lower(classname)}.orion.php</p>
- *
- * @author Thibaut Despoulain
- * @copyright 2006-2011, Thibaut Despoulain
- * @link http://orion.bkcore.com/
- * @version 0.2.11
- *
- * @license <p>BSD 4-clauses
  * 
- * Copyright (c) 2008-2011, Thibaut Despoulain
- * All rights reserved.
+ * <p>Copyright (c) 2008-2011, Thibaut Despoulain
+ * All rights reserved.</p>
  *
- * Redistribution and use in source and binary forms, with or without
+ * <p>Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
@@ -28,9 +21,9 @@
  *    This product includes software developed by the <organization>.
  * 4. Neither the name of the <organization> nor the
  *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ *    derived from this software without specific prior written permission.</p>
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY
+ * <p>THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
@@ -40,6 +33,14 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+ * 
+ * 
+ * @author Thibaut Despoulain
+ * @copyright 2006-2011, Thibaut Despoulain
+ * @link http://orion.bkcore.com/
+ * @version 0.2.11
+ *
+ * @license BSD 4-clauses
  */
 class Orion
 {
@@ -56,6 +57,10 @@ class Orion
      * Relative path to Orion's modules
      */
     const MODULE_PATH = 'modules/';
+    /**
+     * Relative path to Orion's plugins
+     */
+    const PLUGIN_PATH = 'plugins/';
     /**
      * Relative path to Orion's templates
      */
@@ -76,6 +81,10 @@ class Orion
      * Orion's model extension
      */
     const MODEL_EXT = '.model';
+    /**
+     * Orion's plugin extension
+     */
+    const PLUGIN_EXT = '.plugin';
     /**
      * Orion's renderer extension
      */
@@ -100,6 +109,10 @@ class Orion
      * Module class suffix
      */
     const MODULE_SUFFIX = 'Module';
+    /**
+     * Plugin class suffix
+     */
+    const PLUGIN_SUFFIX = 'Plugin';
     /**
      * Template class suffix
      */
@@ -148,6 +161,7 @@ class Orion
                                     ,'form'
                                     ,'model'
                                     ,'module'
+                                    ,'plugin'
                                     ,'renderer'
                                     ,'route'
                                     ,'security'
@@ -229,7 +243,7 @@ class Orion
     }
 
     /**
-     * @return string orion's base dir
+     * @return string orion's base dir with the trailing slash. ex: orion/
      */
     public static function base()
     {
