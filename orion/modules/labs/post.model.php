@@ -14,6 +14,25 @@ class Post
     {
         return explode(' ', $this->tags);
     }
+
+    public function getFormattedContent()
+    {
+        return $this->format($this->content);
+    }
+
+    public function getFormattedIntro()
+    {
+        return $this->format($this->intro);
+    }
+
+    public function format($string)
+    {
+        $array = explode('[code]', $string);
+        $k = count($array);
+        for($i=1; $i<$k; $i+=2)
+            $array[$i] = htmlspecialchars($array[$i]);
+        return implode('', $array);
+    }
 }
 
 class PostHandler extends OrionModel

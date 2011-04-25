@@ -20,26 +20,23 @@ class LabsModule extends OrionModule
         $this->route->addRule('/post/?/offset/@', 'post_category');
         $this->route->addRule('/post/?/?', 'post');
         $this->route->addRule('/post/?', 'post_category');
-        $this->route->addRule('/page/@', 'index');
+        $this->route->addRule('/offset/@', 'index');
         $this->route->addRule('/index', 'index');
 
         $this->useModel('post');
         $this->useModel('category');
+        $this->useModel('tag');
     }
 
     public function _index($offset=0)
     {
-        if($offset == 0)
-            $title = $this->title;
-        else
-            $title = $this->title.' - Offset '.$offset;
-
-        $this->assign('title', $this->title);
-        $this->assign('subtitle', 'Labs');
-
+        $this->loadStd('inc.side.tpl', 'labs-side');
+        
         try {
             $ph = new PostHandler();
-            $posts = $ph->select()
+            $posts = $ph->select('date', 'title', 'url', 'intro', 'content', 'tags')
+						->join('category', array('name', 'url'))
+						->order('date', OrionModel::DESCENDING)
                         ->offset($offset)
                         ->limit($this->perpage+1) // * see below
                         ->fetchAll();
@@ -49,8 +46,6 @@ class LabsModule extends OrionModule
                 $this->assign('prevOffset', ($offset > $this->perpage ? $offset-$this->perpage : 0));
                 $this->assign('offset', $offset);
             }
-            else
-                $this->assign('prevOffset', -1);
 
             if(count($posts) > $this->perpage)
             {// * effective way to determine if there are more posts to display
@@ -59,14 +54,26 @@ class LabsModule extends OrionModule
             }
 
             $this->assign('posts', $posts);
-            $ph->flush();
+
+
+            if($offset > 0)
+            {
+                $this->title .= ' | Offset '.$offset;
+                $this->assign('subtitle', 'Showing posts '.$offset.'&tild;'.($offset+count($posts)).' from all categories');
+            }
+            else
+                $this->assign('subtitle', 'Showing latest posts from all categories');
+
+            $this->assign('title', $this->title);
         }
         catch(OrionException $e)
         {
-            $this->assign('output', $e->__toString(), true);
+            $this->title .= ' | Error';
+            $this->assign('type', 'error');
+            $this->assign('info', $e->getMessage());
         }
 
-        $this->displayView('list');
+        $this->renderView('default.list', 'labs-index', 'labs-index');
     }
 
     public function _error($e)
@@ -74,6 +81,28 @@ class LabsModule extends OrionModule
         if($e == OrionRoute::E_NORULE)
             echo 'Requested URI matches no rule.';
 
+        $this->renderView('default.list', 'labs-error', 'labs-error');
+    }
+
+    public function loadStd($file, $id)
+    {
+        if(!$this->isCached($file, $id, $id))
+        {
+            $ch = new CategoryHandler();
+            $cats = $ch->select('name','url')
+                       ->order('name', OrionModel::ASCENDING)
+                       ->fetchAll();
+            $th = new TagHandler();
+            $tags = $th->select('name','counter')
+                       ->order('name',OrionModel::ASCENDING)
+                       ->fetchAll();
+
+            $this->assign('categories', $cats);
+            $this->assign('tags', $tags);
+        }
+        $this->assign('side_cache_id', $id);
+
+        OrionPlugin::load('jQuery.FancyBox', array('tpl' => $this->tpl));
     }
 }
 ?>

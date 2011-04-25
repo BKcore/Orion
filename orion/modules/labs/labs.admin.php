@@ -73,7 +73,7 @@ class LabsModule extends OrionModule
             $this->assign('info', $e->getMessage());
         }
 
-        $this->displayView('admin.index');
+        $this->renderView('admin.index');
     }
 
     public function _do()
@@ -88,7 +88,6 @@ class LabsModule extends OrionModule
                 $post = $ph->fetchPostData();
                 $ph->save($post);
                 $this->assign('info', 'Post "'.$post->title.'" created with success');
-                $links[] = new OrionMenuEntry("View post", $this->name.OrionContext::getDefaultModeExtension(), '/post/'.$post->url);
             }
             elseif($_POST['action'] == 'post_edit')
             {
@@ -97,7 +96,6 @@ class LabsModule extends OrionModule
                 $ph->update($post);
 
                 $this->assign('info', 'Post "'.$post->title.'" updated with success');
-                $links[] = new OrionMenuEntry("View post", $this->name.OrionContext::getDefaultModeExtension(), '/post/'.$post->url);
             }
 			elseif($_POST['action'] == 'post_delete')
 			{
@@ -105,6 +103,28 @@ class LabsModule extends OrionModule
                 $post = $ph->fetchPostData();
 				$ph->delete($post);
                 $this->assign('info', 'Post "'.$post->title.'" deleted with success');
+			}
+            elseif($_POST['action'] == 'cat_new')
+            {
+                $ch = new CategoryHandler();
+                $cat = $ch->fetchPostData();
+                $ch->save($cat);
+                $this->assign('info', 'Category "'.$cat->name.'" created with success');
+            }
+            elseif($_POST['action'] == 'cat_edit')
+            {
+                $ch = new CategoryHandler();
+                $cat = $ch->fetchPostData();
+                $ch->update($cat);
+
+                $this->assign('info', 'Category "'.$cat->title.'" updated with success');
+            }
+			elseif($_POST['action'] == 'cat_delete')
+			{
+                $ch = new CategoryHandler();
+                $cat = $ch->fetchPostData();
+				$ch->delete($cat);
+                $this->assign('info', 'Category "'.$cat->title.'" deleted with success');
 			}
             $this->title .= ' | Info';
         }
@@ -118,7 +138,7 @@ class LabsModule extends OrionModule
         $links[] = new OrionMenuEntry("Go back to labs admin", OrionContext::getModuleURI());
         $this->assign('title', $this->title, true);
         $this->assign('links', $links);
-        $this->displayView('admin.info');
+        $this->renderView('admin.info');
     }
 
     public function _post_new($id=null)
@@ -134,6 +154,8 @@ class LabsModule extends OrionModule
                            ->where('id', '=', $id)
                            ->limit(1)
                            ->fetch();
+                if($post == null || empty($post))
+                    throw new OrionException('Trying to edit an unexisting post.', E_USER_ERROR, $this->name);
                 $form->hydrate($post);
                 $form->add(OrionForm::HIDDEN, 'action', 'post_edit');
                 $form->add(OrionForm::SUBMIT, 'submit', 'Save');
@@ -158,25 +180,27 @@ class LabsModule extends OrionModule
         }
 
         $this->assign('title', $this->title, true);
-        $this->displayView('admin.form');
+        $this->renderView('admin.form');
     }
 	
 	public function _post_delete($id=null)
 	{
 		try {
 			if($id == null) throw new OrionException('You need to provide a valid [id] to delete something.', E_WARNING, $this->name);
-			
+
+            $ph = new PostHandler();
 			$post = $ph->select()
                         ->where('id', '=', $id)
-                        ->limit(1);
+                        ->limit(1)
+                        ->fetch();
+            $ph->flush();
 						
 			if($post == null) throw new OrionException('Trying to delete an unexisting post.', E_WARNING, $this->name);
 			
 			$form = new OrionForm('form_post', OrionContext::genModuleURL('labs', '/do', $this->mode));
 			$form->add(OrionForm::HIDDEN, 'action', 'post_delete');
 			$form->add(OrionForm::HIDDEN, 'id', $post->id);
-			$form->add(OrionForm::HIDDEN, 'title', $post->title);
-			$form->add(OrionForm::MESSAGE, 'confirm', 'This will delete "'.$post->title.'". Proceed ?"');
+			$form->add(OrionForm::MESSAGE, 'confirm', 'This will delete "'.$post->title.'". Proceed ?');
 			$form->add(OrionForm::SUBMIT, 'submit', 'Delete');
 			$form->add(OrionForm::CANCEL, 'cancel', 'Cancel');
 			
@@ -190,7 +214,7 @@ class LabsModule extends OrionModule
         }
 		
         $this->assign('title', $this->title, true);
-        $this->displayView('admin.form');
+        $this->renderView('admin.form');
 	}
 	
 	public function _post_list($offset=0)
@@ -233,7 +257,125 @@ class LabsModule extends OrionModule
             $this->assign('info', $e->getMessage());
         }
 
-        $this->displayView('admin.list');
+        $this->renderView('admin.list');
+	}
+
+    public function _cat_new($id=null)
+    {
+        try {
+            $ch = new CategoryHandler();
+            $form = new OrionForm('form_post', OrionContext::genModuleURL('labs', '/do', $this->mode));
+            $form->prepare($ch);
+
+            if(!is_null($id))
+            {
+                $cat = $ch->select()
+                           ->where('id', '=', $id)
+                           ->limit(1)
+                           ->fetch();
+                if($cat == null || empty($cat))
+                    throw new OrionException('Trying to edit an unexisting category.', E_USER_ERROR, $this->name);
+                $form->hydrate($cat);
+                $form->add(OrionForm::HIDDEN, 'action', 'cat_edit');
+                $form->add(OrionForm::SUBMIT, 'submit', 'Save');
+                $this->assign('subtitle', 'Edit category');
+                $this->title .= ' | Edit category';
+            }
+            else
+            {
+                $form->add(OrionForm::HIDDEN, 'action', 'cat_new');
+                $form->add(OrionForm::SUBMIT, 'submit', 'Create');
+                $this->assign('subtitle', 'New category');
+                $this->title .= ' | New category';
+            }
+
+            $this->assign('form', $form->toHtml(true), true);
+        }
+        catch(OrionException $e)
+        {
+            $this->title .= ' | Error';
+            $this->assign('type', 'error');
+            $this->assign('info', $e->getMessage());
+        }
+
+        $this->assign('title', $this->title, true);
+        $this->renderView('admin.form');
+    }
+
+	public function _cat_delete($id=null)
+	{
+		try {
+			if($id == null) throw new OrionException('You need to provide a valid [id] to delete something.', E_WARNING, $this->name);
+
+            $ch = new CategoryHandler();
+			$cat = $ch->select()
+                        ->where('id', '=', $id)
+                        ->limit(1)
+                        ->fetch();
+            $ch->flush();
+
+			if($post == null) throw new OrionException('Trying to delete an unexisting post.', E_WARNING, $this->name);
+
+			$form = new OrionForm('form_post', OrionContext::genModuleURL('labs', '/do', $this->mode));
+			$form->add(OrionForm::HIDDEN, 'action', 'cat_delete');
+			$form->add(OrionForm::HIDDEN, 'id', $cat->id);
+			$form->add(OrionForm::MESSAGE, 'confirm', 'This will delete "'.$cat->title.'". Proceed ?');
+			$form->add(OrionForm::SUBMIT, 'submit', 'Delete');
+			$form->add(OrionForm::CANCEL, 'cancel', 'Cancel');
+
+            $this->assign('form', $form->toHtml(true), true);
+		}
+		catch(OrionException $e)
+        {
+            $this->title .= ' | Error';
+            $this->assign('type', 'error');
+            $this->assign('info', $e->getMessage());
+        }
+
+        $this->assign('title', $this->title, true);
+        $this->renderView('admin.form');
+	}
+
+	public function _cat_list($offset=0)
+	{
+		$this->title .= ' | Category list';
+
+		if($offset > 0)
+            $this->title .= ' | Offset '.$offset;
+
+        $this->assign('title', $this->title);
+        $this->assign('subtitle', 'Category list');
+
+        try {
+            $ch = new CategoryHandler();
+            $cats = $ch->select('id', 'url', 'date', 'name')
+						->order('id', OrionModel::DESCENDING)
+                        ->offset($offset)
+                        ->limit($this->perpage+1) // * see below
+                        ->fetchAll();
+
+            if($offset != 0)
+            {
+                $this->assign('prevOffset', ($offset > $this->perpage ? $offset-$this->perpage : 0));
+                $this->assign('offset', $offset);
+            }
+
+            if(count($cats) > $this->perpage)
+            {// * effective way to determine if there are more posts to display
+                $this->assign('nextOffset', $offset+$this->perpage);
+                array_shift($cats);
+            }
+
+            $this->assign('cats', $cats);
+        }
+        catch(OrionException $e)
+        {
+            $this->title .= ' | Error';
+            $this->assign('type', 'error');
+            $this->assign('info', $e->getMessage());
+        }
+
+        $this->renderView('admin.list');
 	}
 	
 	
@@ -248,7 +390,7 @@ class LabsModule extends OrionModule
         $this->assign('info', $err);
 
         $this->assign('title', $this->title, true);
-        $this->displayView('admin.info');
+        $this->renderView('admin.info');
 
     }
 }

@@ -15,8 +15,8 @@
 			{foreach $posts as $post}
 			<tr>
 				<td>
-					<a href="{$orion.module.uri}/post/edit/{$post->id}" class="action edit">Edit</a>
-					<a href="{$orion.module.uri}/post/delete/{$post->id}" class="action delete">Delete</a>
+					<a href="{$orion.module.url}/post/edit/{$post->id}" class="action edit">Edit</a>
+					<a href="{$orion.module.url}/post/delete/{$post->id}" class="action delete">Delete</a>
 				</td>
 				<td>{$post->id}</td>
 				<td>{$post->url}</td>
@@ -28,8 +28,8 @@
 			{/foreach}
 		</table>
 		<div class="datalinks">
-			<a href="{$orion.module.uri}/post/new">New post</a>
-			<a href="{$orion.module.uri}/post/list">View more</a>
+			<a href="{$orion.module.url}/post/new">New post</a>
+			<a href="{$orion.module.url}/post/list">View more</a>
 		</div>
 	</div>
 	
@@ -40,8 +40,8 @@
 			{foreach $cats as $cat}
 			<tr>
 				<td>
-					<a href="{$orion.module.uri}/category/edit/{$cat->id}" class="action edit">Edit</a>
-					<a href="{$orion.module.uri}/category/delete/{$cat->id}" class="action delete">Delete</a>
+					<a href="{$orion.module.url}/category/edit/{$cat->id}" class="action edit">Edit</a>
+					<a href="{$orion.module.url}/category/delete/{$cat->id}" class="action delete">Delete</a>
 				</td>
 				<td>{$cat->id}</td>
 				<td>{$cat->url}</td>
@@ -53,8 +53,8 @@
 			{/foreach}
 		</table>
 		<div class="datalinks">
-			<a href="{$orion.module.uri}/category/new">New category</a>
-			<a href="{$orion.module.uri}/category/list">View more</a>
+			<a href="{$orion.module.url}/category/new">New category</a>
+			<a href="{$orion.module.url}/category/list">View more</a>
 		</div>
 	</div>
 {/nocache}
