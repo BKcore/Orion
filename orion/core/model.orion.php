@@ -8,7 +8,7 @@
  */
 abstract class OrionModel
 {
-    const DEBUG = true;
+    const DEBUG = false;
 	
 	/**
 	 * Slug used to alias joined fields in JOIN queries to ease object conversion in SELECT queries.<br />
@@ -256,16 +256,23 @@ abstract class OrionModel
 
     /**
      * Start a select query chain
+     * @param mixed Either select('f1','f2', ...) or select(array('f1','f2',...))
      */
-    public function &select()
+    public function &select($data=null)
     {
         $this->_TYPE = 'select';
 
-        if(func_num_args() == 0)
+        if(func_num_args() == 0 || $data == null)
             $this->_COLUMNS = array('*');
         else
-            $this->_COLUMNS = $this->tablePrefixArray($this->escapeArray(func_get_args()), $this->_TABLE);
-
+        {
+            if(is_array($data))
+                $cols = $data;
+            else
+                $cols = func_get_args();
+            $this->_COLUMNS = $this->tablePrefixArray($this->escapeArray($cols), $this->_TABLE);
+        }
+        
         return $this;
     }
 
@@ -515,6 +522,9 @@ abstract class OrionModel
             if(!array_key_exists($key, $this->_FIELDS))
                 continue;
 
+            if($this->_FIELDS[$key]->type == OrionModel::PARAM_DATE && $this->_FIELDS[$key]->param == true)
+                continue;
+
             if(!$this->checkConstraints($key, $value))
                 throw new OrionException('Impossible to save object to database. Value does not meets field ['.$key.'] requirements :'.$value, E_USER_WARNING, $this->CLASS_NAME);
 
@@ -545,6 +555,8 @@ abstract class OrionModel
         {
             throw new OrionException($e->getMessage(), $e->getCode(), $this->CLASS_NAME);
         }
+
+        if ($result === false) throw new OrionException('Save query failed to execute. Usage of DEBUG mode is recommended.', E_USER_ERROR, $this->CLASS_NAME);
 
         return (!($result === false));
     }
@@ -624,6 +636,8 @@ abstract class OrionModel
             throw new OrionException($e->getMessage(), $e->getCode(), $this->CLASS_NAME);
         }
 
+        if ($result === false) throw new OrionException('Udpate query failed to execute. Usage of DEBUG mode is recommended.', E_USER_ERROR, $this->CLASS_NAME);
+
         return (!($result === false));
     }
 
@@ -634,24 +648,46 @@ abstract class OrionModel
      */
     public function delete($object=null)
     {
+        if($object == null)
+            throw new OrionException('Cannot delete an empty object.', E_USER_WARNING, $this->CLASS_NAME);
+
         if(empty($this->_FIELDS))
             throw new OrionException('No field bound in model', E_USER_WARNING, $this->CLASS_NAME);
-			
-		if($object != null)
-		{
-			$wheres = array();
-			foreach($this->_PRIMARY as $key)
-			{
-				if(!isset($object->{$key}) || $object->{$key} == null)
-					throw new OrionException('Primary key ['.$key.'] value not provided in object to delete.', E_USER_WARNING, $this->CLASS_NAME);
-				
-				array_push($wheres, $key.'='.$this->format(OrionTools::escapeSql($this->escape($value))), $this->_FIELDS[$key]->type);
-			}
-			$this->_LIMIT = 1;
-			$this->manualWhere(implode(' AND ', $wheres));
-		}
+
+        $wheres = array();
+
+        foreach($this->_PRIMARY as $key)
+        {
+            if(empty($object->{$key}) || $object->{$key} == null)
+                throw new OrionException('Primary key ['.$key.'] value not provided in object to update.', E_USER_WARNING, $this->CLASS_NAME);
+
+            array_push($wheres, $key.'='.$this->format(OrionTools::escapeSql($this->escape($object->{$key})), $this->_FIELDS[$key]->type));
+        }
 
         $this->_TYPE = 'delete';
+        $this->_LIMIT = 1;
+        $this->manualWhere(implode(' AND ', $wheres));
+
+        // Tags' auto parser
+        $tFields = $this->getTagFields();
+        if(!empty($tFields))
+        {
+            try {
+                $hClass = $this->CLASS_NAME;
+                $h = new $hClass();
+                $data = $h->select($tFields)
+                          ->manualWhere(implode(' AND ', $wheres))
+                          ->limit(1)
+                          ->fetch();
+                $h->flush();
+                $this->removeTags($data);
+            }
+            catch(OrionException $e)
+            {
+                throw $e;
+            }
+        }
+
 
         if($this->_PDO == null)
             $this->_PDO = OrionSql::getConnection();
@@ -668,6 +704,9 @@ abstract class OrionModel
             throw new OrionException($e->getMessage(), $e->getCode(), $this->CLASS_NAME);
         }
 
+
+        if ($result === false) throw new OrionException('Delete query failed to execute. Usage of DEBUG mode is recommended.', E_USER_ERROR, $this->CLASS_NAME);
+    
         return (!($result === false));
     }
 
@@ -694,7 +733,7 @@ abstract class OrionModel
 					$thClass = $field->param->model;
 					$th = new $thClass();
 					$values = "(".implode('),(', $this->formatArray($this->escapeArray($tags))).")";
-					$query = "INSERT INTO ".$this->escape($th->getTable())." (".$this->escape($field->param->namefield).") VALUES ".$values." ON DUPLICATE KEY UPDATE ".$field->param->counterfield."=".$field->param->counterfield."+1;";
+					$query = "INSERT INTO ".$this->escape($th->getTable())." (".$this->escape($field->param->namefield).") VALUES ".$values." ON DUPLICATE KEY UPDATE ".$this->escape($field->param->counterfield)."=".$this->escape($field->param->counterfield)."+1;";
 
 					try {
 						$result = $this->_PDO->exec($query);
@@ -709,6 +748,46 @@ abstract class OrionModel
 
 		return !empty($tags);
 	}
+
+    /**
+     * Decrease tags counters and delete tag when deleted entry was the latest one using it
+     * @param Object $object Object to retreive tags from
+     */
+    public function removeTags($object)
+    {
+        if(empty($this->_FIELDS))
+            throw new OrionException('No field bound in model', E_USER_WARNING, $this->CLASS_NAME);
+
+		if($this->_PDO == null)
+            $this->_PDO = OrionSql::getConnection();
+
+		foreach($this->_FIELDS as $field)
+		{
+			if($field->type == OrionModel::PARAM_TAGS)
+			{
+				if($object->{$field->name} != null && !empty($object->{$field->name}))
+				{
+					$tags = explode($field->param->separator, $object->{$field->name});
+                    if(empty($tags)) return false;
+					$thClass = $field->param->model;
+					$th = new $thClass();
+                    $wstart = $this->escape($field->param->namefield)."=";
+					$values = $wstart.implode(' OR '.$wstart, $this->formatArray($this->escapeArray($tags)));
+					$queryUpd = "UPDATE ".$this->escape($th->getTable())." SET ".$this->escape($field->param->counterfield)."=".$this->escape($field->param->counterfield)."-1 WHERE ".$values." ;";
+                    $queryDel = "DELETE FROM ".$this->escape($th->getTable())." WHERE ".$this->escape($field->param->counterfield)."<1;";
+					try {
+                        if(self::DEBUG) echo "SQL QUERY: ".$query;
+						$resultUpd = $this->_PDO->exec($queryUpd);
+						$resultDel = $this->_PDO->exec($queryDel);
+					}
+					catch(PDOException $e)
+					{
+						throw new OrionException($e->getMessage(), $e->getCode(), $this->CLASS_NAME);
+					}
+				}
+			}
+		}
+    }
 
     /**
      * Get current query string
@@ -808,6 +887,9 @@ abstract class OrionModel
      */
     public function flush()
     {
+        if($this->_QUERY instanceof PDOStatement)
+            $this->_QUERY->closeCursor();
+        
         $this->_COLUMNS = array();
         $this->_KEYS=null;
         $this->_VALUES=null;
@@ -836,7 +918,7 @@ abstract class OrionModel
     protected function escape($inp)
     {
         if(is_array($inp))
-            return array_map(__METHOD__, $inp);
+            throw new OrionException('Use escapeArray() to escape arrays, not escape().', E_USER_ERROR, $this->CLASS_NAME);
 
         if(!empty($inp) && is_string($inp)) {
             return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $inp);
@@ -925,6 +1007,20 @@ abstract class OrionModel
 			$this->parseJoinFields($array[$i]);
 		}
 	}
+
+    /**
+     * Get fields name with type == PARAM_TAGS
+     * @return array<string>
+     */
+    protected function getTagFields()
+    {
+        $tmp = array();
+        foreach($this->_FIELDS as $field)
+            if($field->type == self::PARAM_TAGS)
+                array_push($tmp, $field->name);
+
+        return $tmp;
+    }
 	
     /**
      * Test wether $value meets the requirements of corresponging bounded field
