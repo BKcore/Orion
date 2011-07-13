@@ -39,6 +39,12 @@ class MainConfig extends OrionConfig
         // Default 404 error document URL
         $this->set('URL_404', 'http://mysite.com/404.html');
 
+        // Folder containing images uploads (needs rw+ access)
+        $this->set('IMAGE_UPLOAD_DIR', 'orion/uploads/images/');
+
+        // Folder containing files uploads (needs rw+ access)
+        $this->set('FILE_UPLOAD_DIR', 'orion/uploads/files/');
+
         // Standard template folder path (for php)
         $this->set('TEMPLATE_PATH', 'orion/renderers/smarty/templates/');
         
