@@ -182,11 +182,16 @@ class OrionAuthUserHandler extends OrionModel
     {
         $this->bindTable(Orion::config()->get('AUTH_TABLE_USER'));
         $this->bindClass('OrionAuthUser');
-        $this->bind('id', $this->PARAM_ID(), 'Identifier', true);
+        $this->bind(new OrionModelId('id', 'Identifier', true));
+        $this->bind(new OrionModelString('name', 'Name', 255, true));
+        $this->bind(new OrionModelString('login', 'Login', 100, true));
+        $this->bind(new OrionModelString('password', 'Password', 255, true));
+        $this->bind(new OrionModelInteger('level', 'Level', true));
+        /*$this->bind('id', $this->PARAM_ID(), 'Identifier', true);
         $this->bind('name', $this->PARAM_STR(255), 'Name');
         $this->bind('login', $this->PARAM_STR(100), 'Login');
         $this->bind('password', $this->PARAM_STR(1000), 'Password');
-        $this->bind('level', $this->PARAM_INT(), 'Level');
+        $this->bind('level', $this->PARAM_INT(), 'Level');*/
     }
 }
 ?>
