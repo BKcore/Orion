@@ -37,7 +37,7 @@ class jQueryFancyBoxPlugin
                 'transitionIn'		: 'none',
                 'transitionOut'		: 'none',
                 'titlePosition' 	: 'over'
-            });");
+            });", true);
         }
         catch(OrionException $e)
         {

@@ -21,7 +21,9 @@ class OrionPlugin
     public static function load($plugin, $args=null)
     {
         $plist = explode('.', $plugin);
-        
+
+        if(is_string($plist)) $plist = array($plist);
+
         $parsed = array();
         foreach($plist as $p)
         {
@@ -29,16 +31,20 @@ class OrionPlugin
             $class = implode('', $parsed) . $p . Orion::PLUGIN_SUFFIX;
             $pname = OrionTools::concatWithTrail('.', $parsed, true) . $p;
 
+
             if(file_exists($file))
             {
                 if(!in_array($pname, self::$loaded))
                 {
                     require_once($file);
 
-                    if(method_exists($class, 'load'))
-                        call_user_func($class.'::load', $args);
-                    
-                    self::$loaded[] = $pname;
+                    try {
+                        if(method_exists($class, 'load'))
+                            call_user_func($class.'::load', $args);
+
+                        self::$loaded[] = $pname;
+                    }
+                    catch(OrionException $e) { throw $e; }
                 }
 
                 $parsed[] = $pname;

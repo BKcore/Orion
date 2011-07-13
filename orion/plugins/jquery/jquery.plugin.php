@@ -25,37 +25,49 @@ class jQueryPlugin
             throw new OrionException('Plugin jQuery needs a template object as argument in $args["tpl"]', E_USER_ERROR, self::CLASS_NAME);
 
         self::$TPL =& $args['tpl'];
-        echo "##".self::JQUERY_FILE;
+        
         self::$TPL->includeJS(self::JQUERY_FILE);
     }
 
     /**
-     * Adds inline js script to output view. script will be automatically enclosed in document.ready jQuery function.
+     * Adds inline js script to output view. script will be automatically enclosed in document.ready jQuery function if whenDocumentReady is set to true.
      * @param string $script
+     * @param boolean
      */
-    public static function script($script)
+    public static function script($script, $whenDocumentReady=false)
     {
         if(self::$TPL == null)
             throw new OrionException('Template object must be defined in load function before calling script()', E_USER_WARNING, self::CLASS_NAME);
 
-        $script = '<script type="text/javascript">
-            $(document).ready(function(){
-                '.$script.'
-            });
-            </script>';
+        if($whenDocumentReady)
+        {
+            $script = '<script type="text/javascript">
+                $(document).ready(function(){
+                    '.$script.'
+                });
+                </script>';
+        }
+        else
+        {
+            $script = '<script type="text/javascript">
+                    '.$script.'
+                </script>';
+        }
         self::$TPL->addJs($script);
     }
 
     /**
      * Loads a jQuery sub plugin js file like FancyBox for example
      * @param string $file
+     * @param boolean $external Is the file external ? if false, automatically adds jQuery plugin path
      */
-    public static function loadPlugin($file)
+    public static function loadPlugin($file, $external=false)
     {
         if(self::$TPL == null)
             throw new OrionException('Template object must be defined in load function before calling loadPlugin()', E_USER_WARNING, self::CLASS_NAME);
         
-        $file = OrionContext::getPluginURL('jquery') . $file;
+        if(!$external)
+            $file = OrionContext::getPluginURL('jquery') . $file;
 
         self::$TPL->includeJS($file);
     }
@@ -63,13 +75,15 @@ class jQueryPlugin
     /**
      * Loads a jQuery sub plugin CSS file
      * @param string $file
+     * @param boolean $external Is the file external ? if false, automatically adds jQuery plugin path
      */
-    public static function loadCSS($file)
+    public static function loadCSS($file, $external=false)
     {
         if(self::$TPL == null)
             throw new OrionException('Template object must be defined in load function before calling loadCSS()', E_USER_WARNING, self::CLASS_NAME);
-
-        $file = OrionContext::getPluginURL('jquery') . $file;
+        
+        if(!$external)
+            $file = OrionContext::getPluginURL('jquery') . $file;
 
         self::$TPL->includeCSS($file);
     }
