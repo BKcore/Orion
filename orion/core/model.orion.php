@@ -209,7 +209,7 @@ abstract class OrionModel
                 $cols = $data;
             else
                 $cols = func_get_args();
-            $this->_COLUMNS = $this->addQuotesArray($this->tablePrefixArray($this->escapeArray($cols), $this->_TABLE));
+            $this->_COLUMNS = $this->tablePrefixArray($this->escapeArray($cols), $this->_TABLE);
         }
         
         return $this;
@@ -324,10 +324,12 @@ abstract class OrionModel
         if(empty($fields) || empty($mode))
             throw new OrionException('Missing parameter in order clause.', E_USER_WARNING, get_class($this));
 
-        if(!is_array($fields))
-            array($fields);
+        if(is_array($fields))
+            $fields = $fields;
+        else
+            $fields = $fields;
 
-        $this->_ORDER = array($this->addQuotesArray($fields), $mode);
+        $this->_ORDER = array($fields, $mode);
 
         return $this;
     }
@@ -350,9 +352,9 @@ abstract class OrionModel
             throw new OrionException('Where clause field ['.$field.'] is not a valid bounded field.', E_USER_WARNING, get_class($this));
         */
         if(array_key_exists($field, $this->_FIELDS))
-            $this->_WHERE = array($this->addQuotes($field), $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
+            $this->_WHERE = array($field, $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
         else
-            $this->_WHERE = array($this->addQuotes($field), $comparator, "'".$this->escape($value)."'");
+            $this->_WHERE = array($field, $comparator, "'".$this->escape($value)."'");
         
         return $this;
     }
@@ -369,9 +371,9 @@ abstract class OrionModel
             throw new OrionException('Missing argument in AND where clause', E_USER_WARNING, get_class($this));
 
         if(array_key_exists($field, $this->_FIELDS))
-            $this->_AWHERE = array($this->addQuotes($field), $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
+            $this->_AWHERE = array($field, $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
         else
-            $this->_AWHERE = array($this->addQuotes($field), $comparator, "'".$this->escape($value)."'");
+            $this->_AWHERE = array($field, $comparator, "'".$this->escape($value)."'");
 
         return $this;
     }
@@ -388,9 +390,9 @@ abstract class OrionModel
             throw new OrionException('Missing argument in OR where clause', E_USER_WARNING, get_class($this));
 
         if(array_key_exists($field, $this->_FIELDS))
-            $this->_OWHERE = array($this->addQuotes($field), $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
+            $this->_OWHERE = array($field, $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
         else
-            $this->_OWHERE = array($this->addQuotes($field), $comparator, "'".$this->escape($value)."'");
+            $this->_OWHERE = array($field, $comparator, "'".$this->escape($value)."'");
 
         return $this;
     }
@@ -434,9 +436,9 @@ abstract class OrionModel
 		foreach($fields as $field)
 		{
 			$field = $field;
-			$this->_JOIN_COLUMNS[] = array($this->addQuotes($this->tablePrefix($field, $jh->getTable())), self::L_FIELD_SLUG.$link.self::L_FIELD_SEP.$field);
+			$this->_JOIN_COLUMNS[] = array($this->tablePrefix($field, $jh->getTable()), self::L_FIELD_SLUG.$link.self::L_FIELD_SEP.$field);
 		}
-		$this->_JOIN[$link] = array($this->addQuotes($jh->getTable()), $this->escape($type));
+		$this->_JOIN[$link] = array($jh->getTable(), $this->escape($type));
 		
 		return $this;
 	}
@@ -476,7 +478,7 @@ abstract class OrionModel
                 $value = $this->_FIELDS[$key]->prepare($value);
 				if($this->_FIELDS[$key]->isEmptyValue($value)) continue;
 
-                array_push($keys, $this->addQuotes($key));
+                array_push($keys, $key);
                 array_push($values, $value);
             }
 
@@ -527,7 +529,7 @@ abstract class OrionModel
                 if(empty($object->{$key}))
                     throw new OrionException('Primary key ['.$key.'] value not provided in object to update.', E_USER_WARNING, get_class($this));
 
-                array_push($wheres, $this->addQuotes($key).'='.$this->_FIELDS[$key]->prepare($this->escape($object->{$key})));
+                array_push($wheres, $key.'='.$this->_FIELDS[$key]->prepare($this->escape($object->{$key})));
             }
 
             if(empty($wheres))
@@ -557,7 +559,7 @@ abstract class OrionModel
                 $value = $this->_FIELDS[$key]->prepare($value);
 				if($this->_FIELDS[$key]->isEmptyValue($value)) continue;
 
-				array_push($sets, $this->addQuotes($key).'='.$value);
+				array_push($sets, $key.'='.$value);
             }
 
             $this->_TYPE = 'update';
@@ -605,7 +607,7 @@ abstract class OrionModel
                 if(empty($object->{$key}))
                     throw new OrionException('Primary key ['.$key.'] value not provided in object to delete.', E_USER_WARNING, get_class($this));
 
-                array_push($wheres, $this->addQuotes($key).'='.$this->_FIELDS[$key]->prepare($this->escape($object->{$key})));
+                array_push($wheres, $key.'='.$this->_FIELDS[$key]->prepare($this->escape($object->{$key})));
             }
 
             $this->_TYPE = 'delete';
@@ -689,7 +691,7 @@ abstract class OrionModel
                 if($where != null)
                     $query .= " WHERE ".$where;
                 if(!empty($this->_ORDER))
-                    $query .= " ORDER BY ".implode(',', $this->_ORDER);
+                    $query .= " ORDER BY ".implode(' ', $this->_ORDER);
                 if($this->_LIMIT != null)
                     $query .= " LIMIT ".$this->_LIMIT;
                 if($this->_OFFSET != null)
@@ -763,33 +765,6 @@ abstract class OrionModel
         $this->_QUERY=null;
         $this->_QUERY_STRING=null;
         $this->_RESULT=null;
-    }
-
-    /**
-     * Add SQL quotes (for tables and fields)
-     * @param string $value
-     * @return string
-     */
-    protected function addQuotes($value)
-    {
-        return '`'.$value.'`';
-    }
-
-    /**
-     * Add SQL quotes (for tables and fields), array version.
-     * @param string[] $array
-     * @return string[]
-     */
-    protected function addQuotesArray($array)
-    {
-        $tmp = array();
-		$count = count($array);
-		for($i=0; $i<$count; $i++)
-		{
-			$tmp[$i] = $this->addQuotes($array[$i]);
-		}
-
-		return $tmp;
     }
 
     /**
