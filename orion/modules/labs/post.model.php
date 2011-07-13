@@ -27,7 +27,7 @@ class Post
 
     public function format($string)
     {
-        $array = explode('[code]', $string);
+        $array = explode('[code]', stripslashes($string));
         $k = count($array);
         for($i=1; $i<$k; $i+=2)
             $array[$i] = htmlspecialchars($array[$i]);
@@ -37,13 +37,19 @@ class Post
 
 class PostHandler extends OrionModel
 {
-    protected $CLASS_NAME = 'PostHandler';
-
     public function bindAll()
     {
         $this->bindTable('bkcore_labs_posts');
         $this->bindClass('Post');
-        $this->bind('id', $this->PARAM_ID(), 'Identifier', true);
+        $this->bind(new OrionModelLink('category', 'Category', 'CategoryHandler', 'id', 'name', true));
+        $this->bind(new OrionModelId('id', 'Identifier', true));
+        $this->bind(new OrionModelString('title', 'Title', 255, true));
+        $this->bind(new OrionModelString('url', 'Url tag', 100, true));
+        $this->bind(new OrionModelTags('tags', 'Tags', ' ', 'TagHandler', 'name', 'counter'));
+        $this->bind(new OrionModelDate('date', 'Date', true));
+        $this->bind(new OrionModelText('intro', 'Introduction', 400));
+        $this->bind(new OrionModelText('content', 'Content', null));
+        /*$this->bind('id', $this->PARAM_ID(), 'Identifier', true);
         $this->bind('title', $this->PARAM_STR(255), 'Title');
         $this->bind('url', $this->PARAM_STR(100), 'Url tag');
         $this->bind('tags', $this->PARAM_TAGS(' ', 'TagHandler', 'name', 'counter'), 'Tags');
@@ -51,7 +57,7 @@ class PostHandler extends OrionModel
         $this->bind('category', $this->PARAM_ID(), 'Category');
         $this->bind('intro', $this->PARAM_TEXT(400), 'Introduction');
         $this->bind('content', $this->PARAM_TEXT(), 'Content');
-        $this->link('CategoryHandler', 'category', 'id', 'name');
+        $this->link('CategoryHandler', 'category', 'id', 'name');*/
     }
 }
 ?>

@@ -31,7 +31,7 @@ class OrionTools
      * Easy regex wildacards traduction in PCRE
      * @var array
      */
-    private static $_REGEX_WCREPLACE = array('(\w+)', '(\d+)');
+    private static $_REGEX_WCREPLACE = array('([a-zA-Z0-9_-]+)', '(\d+)');
 
     /**
      * SQL wildards unescaped
@@ -166,8 +166,8 @@ class OrionTools
 			return $regex;
 		else
 			return '#'.str_replace(self::$_REGEX_WILDCARDS, self::$_REGEX_WCREPLACE,
-						str_replace(self::$_REGEX_UNESCAPED, self::$_REGEX_ESCAPED,
 						str_replace(self::$_REGEX_ESCAPED, self::$_REGEX_UNESCAPED,
+						str_replace(self::$_REGEX_UNESCAPED, self::$_REGEX_ESCAPED,
 						$regex))).'$#';
 	}
 }

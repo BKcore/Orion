@@ -156,9 +156,9 @@ abstract class OrionModule
      * @param string $template the resource handle of the template file  or template object
      * @param mixed $id cache id to be used with this template
      */
-    protected function render($template, $id=null)
+    protected function render($template, $id=null, $compile_id=null)
     {
-        $this->tpl->render($template, $cache_id);
+        $this->tpl->render($template, $id, $compile_id);
     }
 
     /**
@@ -169,7 +169,7 @@ abstract class OrionModule
      * @param mixed $compile_id compile id to be used with this template
      * @param object $parent next higher level of Smarty variables
      */
-    protected function renderView($view, $id=null)
+    protected function renderView($view, $id=null, $compile_id=null)
     {
         try {
             $filename = OrionContext::$PATH . Orion::MODULE_PATH . $this->name . DIRECTORY_SEPARATOR . $view . Orion::VIEW_EXT . '.tpl';
@@ -177,7 +177,7 @@ abstract class OrionModule
             if(!file_exists($filename))
                 throw new OrionException('View file ['.$filename.'] does not exist.', E_USER_WARNING, $this->name);
 
-            $this->tpl->renderView($filename, $this->template, $id);
+            $this->tpl->renderView($filename, $this->template, $id, $compile_id);
         }
         catch(OrionException $e)
         {

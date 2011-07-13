@@ -102,7 +102,7 @@ class LabsModule extends OrionModule
                 $ph = new PostHandler();
                 $post = $ph->fetchPostData();
 				$ph->delete($post);
-                $this->assign('info', 'Post "'.$post->title.'" deleted with success');
+                $this->assign('info', 'Post deleted with success');
 			}
             elseif($_POST['action'] == 'cat_new')
             {
@@ -117,14 +117,14 @@ class LabsModule extends OrionModule
                 $cat = $ch->fetchPostData();
                 $ch->update($cat);
 
-                $this->assign('info', 'Category "'.$cat->title.'" updated with success');
+                $this->assign('info', 'Category "'.$cat->name.'" updated with success');
             }
 			elseif($_POST['action'] == 'cat_delete')
 			{
                 $ch = new CategoryHandler();
                 $cat = $ch->fetchPostData();
 				$ch->delete($cat);
-                $this->assign('info', 'Category "'.$cat->title.'" deleted with success');
+                $this->assign('info', 'Category deleted with success');
 			}
             $this->title .= ' | Info';
         }
@@ -138,6 +138,11 @@ class LabsModule extends OrionModule
         $links[] = new OrionMenuEntry("Go back to labs admin", OrionContext::getModuleURI());
         $this->assign('title', $this->title, true);
         $this->assign('links', $links);
+
+
+        $this->tpl->clearCache('default.post.view.tpl', '*');
+        $this->tpl->clearCache('inc.side.tpl');
+
         $this->renderView('admin.info');
     }
 
@@ -145,7 +150,7 @@ class LabsModule extends OrionModule
     {
         try {
             $ph = new PostHandler();
-            $form = new OrionForm('form_post', OrionContext::genModuleURL('labs', '/do', $this->mode));
+            $form = new OrionForm('form_post', OrionContext::genModuleURL($this->name, '/do', $this->mode));
             $form->prepare($ph);
 
             if(!is_null($id))
@@ -157,15 +162,15 @@ class LabsModule extends OrionModule
                 if($post == null || empty($post))
                     throw new OrionException('Trying to edit an unexisting post.', E_USER_ERROR, $this->name);
                 $form->hydrate($post);
-                $form->add(OrionForm::HIDDEN, 'action', 'post_edit');
-                $form->add(OrionForm::SUBMIT, 'submit', 'Save');
+                $form->add(new OrionFormHidden('action', 'post_edit'))
+                     ->add(new OrionFormSubmit('submit', 'Save'));
                 $this->assign('subtitle', 'Edit post');
                 $this->title .= ' | Edit post';
             }
             else
             {
-                $form->add(OrionForm::HIDDEN, 'action', 'post_new');
-                $form->add(OrionForm::SUBMIT, 'submit', 'Create');
+                $form->add(new OrionFormHidden('action', 'post_new'))
+                     ->add(new OrionFormSubmit('submit', 'Create'));
                 $this->assign('subtitle', 'New post');
                 $this->title .= ' | New post';
             }
@@ -197,12 +202,12 @@ class LabsModule extends OrionModule
 						
 			if($post == null) throw new OrionException('Trying to delete an unexisting post.', E_WARNING, $this->name);
 			
-			$form = new OrionForm('form_post', OrionContext::genModuleURL('labs', '/do', $this->mode));
-			$form->add(OrionForm::HIDDEN, 'action', 'post_delete');
-			$form->add(OrionForm::HIDDEN, 'id', $post->id);
-			$form->add(OrionForm::MESSAGE, 'confirm', 'This will delete "'.$post->title.'". Proceed ?');
-			$form->add(OrionForm::SUBMIT, 'submit', 'Delete');
-			$form->add(OrionForm::CANCEL, 'cancel', 'Cancel');
+			$form = new OrionForm('form_post', OrionContext::genModuleURL($this->name, '/do', $this->mode));
+            $form->add(new OrionFormHidden('action', 'post_delete'))
+                 ->add(new OrionFormHidden('id', $post->id))
+                 ->add(new OrionFormMessage('confirm', 'Confirm ?', 'This will delete "'.$post->title.'". Proceed ?'))
+                 ->add(new OrionFormSubmit('submit', 'Delete'))
+                 ->add(new OrionFormCancel('cancel', 'Cancel'));
 			
             $this->assign('form', $form->toHtml(true), true);
 		}
@@ -264,7 +269,7 @@ class LabsModule extends OrionModule
     {
         try {
             $ch = new CategoryHandler();
-            $form = new OrionForm('form_post', OrionContext::genModuleURL('labs', '/do', $this->mode));
+            $form = new OrionForm('form_post', OrionContext::genModuleURL($this->name, '/do', $this->mode));
             $form->prepare($ch);
 
             if(!is_null($id))
@@ -276,15 +281,15 @@ class LabsModule extends OrionModule
                 if($cat == null || empty($cat))
                     throw new OrionException('Trying to edit an unexisting category.', E_USER_ERROR, $this->name);
                 $form->hydrate($cat);
-                $form->add(OrionForm::HIDDEN, 'action', 'cat_edit');
-                $form->add(OrionForm::SUBMIT, 'submit', 'Save');
+                $form->add(new OrionFormHidden('action', 'cat_edit'))
+                     ->add(new OrionFormSubmit('submit', 'Save'));
                 $this->assign('subtitle', 'Edit category');
                 $this->title .= ' | Edit category';
             }
             else
             {
-                $form->add(OrionForm::HIDDEN, 'action', 'cat_new');
-                $form->add(OrionForm::SUBMIT, 'submit', 'Create');
+                $form->add(new OrionFormHidden('action', 'cat_new'))
+                     ->add(new OrionFormSubmit('submit', 'Create'));
                 $this->assign('subtitle', 'New category');
                 $this->title .= ' | New category';
             }
@@ -314,14 +319,14 @@ class LabsModule extends OrionModule
                         ->fetch();
             $ch->flush();
 
-			if($post == null) throw new OrionException('Trying to delete an unexisting post.', E_WARNING, $this->name);
+			if($cat == null) throw new OrionException('Trying to delete an unexisting category.', E_WARNING, $this->name);
 
-			$form = new OrionForm('form_post', OrionContext::genModuleURL('labs', '/do', $this->mode));
-			$form->add(OrionForm::HIDDEN, 'action', 'cat_delete');
-			$form->add(OrionForm::HIDDEN, 'id', $cat->id);
-			$form->add(OrionForm::MESSAGE, 'confirm', 'This will delete "'.$cat->title.'". Proceed ?');
-			$form->add(OrionForm::SUBMIT, 'submit', 'Delete');
-			$form->add(OrionForm::CANCEL, 'cancel', 'Cancel');
+			$form = new OrionForm('form_post', OrionContext::genModuleURL($this->name, '/do', $this->mode));
+            $form->add(new OrionFormHidden('action', 'cat_delete'))
+                 ->add(new OrionFormHidden('id', $cat->id))
+                 ->add(new OrionFormMessage('confirm', 'Confirm ?', 'This will delete "'.$cat->name.'". Proceed ?'))
+                 ->add(new OrionFormSubmit('submit', 'Delete'))
+                 ->add(new OrionFormCancel('cancel', 'Cancel'));
 
             $this->assign('form', $form->toHtml(true), true);
 		}
