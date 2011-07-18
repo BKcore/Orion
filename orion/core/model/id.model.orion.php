@@ -10,11 +10,20 @@ class OrionModelId extends OrionModelField
      */
     public function __construct($bind='id', $label='Id', $primary=true)
     {
-        $this->visible = false;
         $this->type = 'id';
         $this->bind = $bind;
         $this->label = $label;
         $this->primary = $primary;
+    }
+
+    public function toHtml($XHTML=true)
+    {
+        if($XHTML)
+            $tag = ' /';
+        else
+            $tag = '';
+        
+        return '<input name="'.$this->bind.'" type="hidden" value="'.$this->value.'"'.$tag.'>';
     }
 }
 

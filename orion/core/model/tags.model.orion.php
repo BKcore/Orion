@@ -33,8 +33,11 @@ class OrionModelTags extends OrionModelField
 
     public function onUpdate($newvalue, $oldvalue)
     {
-        $this->removeTags($oldvalue);
-        $this->saveTags($newvalue);
+        if($newvalue != $oldvalue)
+        {
+            $this->removeTags($oldvalue);
+            $this->saveTags($newvalue);
+        }
     }
 
     public function toHtml($XHTML=true)

@@ -20,7 +20,7 @@ class OrionModelImage extends OrionModelField
     {
         if($this->image != null)
             return "'".$this->image->getIdentifier()."'";
-		elseif(empty($value))
+		elseif(empty($_FILES[$this->bind]['tmp_name']))
 			return null;
 		else
 			throw new OrionException('Error while uploading image, unable to retreive identifier.', E_USER_ERROR);
@@ -28,6 +28,11 @@ class OrionModelImage extends OrionModelField
 
 	public function onSave($value)
 	{
+        if(empty($_FILES[$this->bind]['tmp_name']))
+            return;
+
+        var_dump($_FILES[$this->bind]);
+
 		try {
             $this->image = new OrionUpload($this->bind, OrionUpload::IMAGE_UPLOAD_DIR);
             $this->image->restrict(OrionUpload::JPEG, OrionUpload::PNG, OrionUpload::GIF);

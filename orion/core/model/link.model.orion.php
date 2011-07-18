@@ -40,9 +40,9 @@ class OrionModelLink extends OrionModelField
                         ->fetchAll();
             $lm->flush();
 
-            $tmp = '<label for="'.$this->bind.'">'.$this->label.'</label><select name="'.$this->bind.'">\n';
+            $tmp = '<label for="'.$this->bind.'">'.$this->label.'</label><select name="'.$this->bind.'">'."\n";
             foreach($data as $item)
-                $tmp .= '<option value="'.$item->{$this->rightfield}.'"'. ($this->value == $item->{$this->rightfield} ? ' selected="selected"' : '') .'>'.$item->{$this->rightfieldlabel}.'</option>\n';
+                $tmp .= '<option value="'.$item->{$this->rightfield}.'"'. ($this->value == $item->{$this->rightfield} ? ' selected="selected"' : '') .'>'.$item->{$this->rightfieldlabel}.'</option>'."\n";
             $tmp .= '</select>';
         }
         catch(OrionException $e)

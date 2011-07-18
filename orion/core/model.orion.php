@@ -554,7 +554,7 @@ abstract class OrionModel
 				if(!$this->_FIELDS[$key]->validate($value))
                     throw new OrionException('Impossible to update object in database. Value does not meets field ['.$key.'] requirements.', E_USER_WARNING, get_class($this));
 
-                $this->_FIELDS[$key]->onUpdate($key, $oldData->{$key}, $value);
+                $this->_FIELDS[$key]->onUpdate($value, $oldData->{$key});
 				
                 $value = $this->_FIELDS[$key]->prepare($value);
 				if($this->_FIELDS[$key]->isEmptyValue($value)) continue;
@@ -772,7 +772,7 @@ abstract class OrionModel
      * @param string $inp
      * @return string
      */
-    protected function escape($inp)
+    public function escape($inp)
     {
         if(is_array($inp))
             throw new OrionException('Use escapeArray() to escape arrays, not escape().', E_USER_ERROR, get_class($this));
@@ -789,7 +789,7 @@ abstract class OrionModel
      * @param array<mixed> $array Array to escape
      * @return array<mixed> Escaped array
      */
-    protected function escapeArray( $array )
+    public function escapeArray( $array )
 	{
 		$tmp = array();
 		$count = count($array);
@@ -801,13 +801,43 @@ abstract class OrionModel
 		return $tmp;
 	}
 
+     /**
+     * Format a value for SQL use
+     * @param mixed $value
+     * @return string SQL value formatted
+     */
+    public function format($value)
+    {
+        if($value == null)
+            return "''";
+        else
+            return "'".$value."'";
+    }
+
+	/**
+     * Maps the standard $this->format to the elements of $array
+     * @param array<mixed> $array Array to format
+     * @return array<mixed> Escaped array
+     */
+	public function formatArray($array)
+	{
+		$tmp = array();
+		$count = count($array);
+		for($i=0; $i<$count; $i++)
+		{
+			$tmp[$i] = $this->format($array[$i], $type);
+		}
+
+		return $tmp;
+	}
+
 	/**
 	 * Add a table prefix to a field name
 	 * @param string $field field name
 	 * @param string $table table name
 	 * @return string prefixed field name
 	 */
-	protected function tablePrefix($field, $table)
+	public function tablePrefix($field, $table)
 	{
 		return $table.'.'.$field;
 	}
@@ -818,7 +848,7 @@ abstract class OrionModel
      * @param string $table The table prefix
      * @return array
      */
-    protected function tablePrefixArray($array, $table)
+    public function tablePrefixArray($array, $table)
     {
         $tmp = array();
 		$count = count($array);
