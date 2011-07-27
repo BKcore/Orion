@@ -42,9 +42,16 @@
  *
  * @license BSD 4-clauses
  */
+define('DS', DIRECTORY_SEPARATOR);
+define('FS', '.');
+
 class Orion
 {
     const CLASS_NAME = 'Orion';
+    /**
+     * Class base
+     */
+    const CLASS_BASE = 'Orion';
     /**
      * Relative path to Orion's core classes
      */
@@ -149,24 +156,6 @@ class Orion
      * @var string
      */
      private static $MODE = 'default';
-     
-    /**
-     * The list of Orion's core classes
-     * @var array<string>
-     */
-    private static $CLASSES = array('auth'
-                                    ,'config'
-                                    ,'context'
-                                    ,'exception'
-                                    ,'form'
-                                    ,'model'
-                                    ,'module'
-                                    ,'plugin'
-                                    ,'renderer'
-                                    ,'route'
-                                    ,'security'
-                                    ,'sql'
-                                    ,'tools');
 
     /**
      * Start the Orion instance.<br />
@@ -211,14 +200,16 @@ class Orion
         
         OrionContext::init(self::$BASE);
         $module = OrionContext::$MODULE_NAME;
-        $modulefile = self::$BASE.self::MODULE_PATH.$module.'/'.$module.'.'.self::$MODE.'.php';
+        $modulefile = self::$BASE.self::MODULE_PATH.$module.DS.$module.FS.self::$MODE.'.php';
         $moduleclass = ucfirst($module).self::MODULE_SUFFIX;
 
         if(!in_array($module, self::$CONFIG->get('OPEN_MODULES')))
-            throw new OrionException('Module ['.$module.'] is not a trusted module (see OPEN_MODULES in configuration).', E_USER_ERROR, self::CLASS_NAME);
+            OrionContext::redirect (404);
+            //throw new OrionException('Module ['.$module.'] is not a trusted module (see OPEN_MODULES in configuration).', E_USER_ERROR, self::CLASS_NAME);
 
         if(!file_exists($modulefile))
-            throw new OrionException('Module class file ('.$modulefile.') does not exist.', E_USER_ERROR, self::CLASS_NAME);
+            OrionContext::redirect (404);
+            //throw new OrionException('Module class file ('.$modulefile.') does not exist.', E_USER_ERROR, self::CLASS_NAME);
 
         require_once($modulefile);
         self::$MODULE = new $moduleclass();
@@ -231,15 +222,48 @@ class Orion
      */
     public static function autoload($classname)
     {
-        $filename = strtolower(str_replace(self::CLASS_SUFFIX, '', $classname));
-        $file = self::$BASE.self::CORE_PATH.$filename.self::CLASS_EXT.'.php';
-        if(in_array($filename, self::$CLASSES))
-        {
-            if(file_exists($file))
-                require_once($file);
-            else throw new Exception('Class file does not exist.', E_USER_ERROR);
+        try {
+            $file = self::parseClassName($classname);
         }
-        //else throw new Exception('Trying to load an unregistered class.', E_USER_ERROR);
+        catch (Exception $e)
+        {
+            return false;
+        }
+
+        if(file_exists($file))
+            require_once($file);
+        else
+            throw new Exception('Class file does not exist.', E_USER_ERROR);
+        
+    }
+
+    /**
+     * Parse a class name and transform it into its corresponding path
+     * @param string $name of the class
+     */
+    public static function parseClassName($name)
+    {
+        $path = '';
+        $subs = array();
+        $pattern = '#^'.self::CLASS_BASE.'([A-Z][a-z0-9]+)([A-Z][A-Za-z0-9]+)?$#';
+
+        if(preg_match($pattern, $name, $subs) == 0) throw new Exception('Unrecognized class name.', E_WARNING);
+        else
+        {
+            if(!empty($subs[2]) && !empty($subs[1]))
+            {
+                $path = self::$BASE.self::CORE_PATH.strtolower($subs[1]).DS.strtolower($subs[2]).FS.strtolower($subs[1]).self::CLASS_EXT.'.php';
+            }
+            elseif(!empty($subs[1]))
+            {
+                 $path = self::$BASE.self::CORE_PATH.strtolower($subs[1]).self::CLASS_EXT.'.php';
+            }
+            else
+            {
+                throw new Exception('Unexpected autoload error.', E_WARNING);
+            }
+        }
+        return $path;
     }
 
     /**
@@ -274,20 +298,26 @@ class Orion
     public static function getDataArray()
     {
         $array = array();
-        $array['module'] = array();
-        $array['module']['name'] = self::$MODULE->getName();
-        $array['module']['path'] = OrionContext::getModulePath();
-        $array['module']['url'] = OrionContext::getModuleURL(self::$MODULE->getName());
-        $array['module']['uri'] = self::$MODULE->getName().OrionContext::$MODULE_EXT;
-        $array['template'] = array();
-        $array['template']['name'] = self::$MODULE->getTemplate();
-        $array['template']['path'] = OrionContext::getTemplatePath(self::$MODULE->getTemplate());
-        $array['template']['abspath'] = OrionContext::getTemplateAbsolutePath(self::$MODULE->getTemplate());
-        if(self::$CONFIG->defined(strtoupper(self::getMode()) . '_MENU'))
-            $array['menu'] = self::$CONFIG->get(strtoupper(self::getMode()) . '_MENU');
-        $array['title'] = self::$CONFIG->get('SITE_NAME');
-        $array['baseurl'] = self::$CONFIG->get('BASE_URL');
-        $array['mode'] = self::$MODE;
+        try {
+            $array['module'] = array();
+            $array['module']['name'] = self::$MODULE->getName();
+            $array['module']['path'] = OrionContext::getModulePath();
+            $array['module']['url'] = OrionContext::getModuleURL(self::$MODULE->getName());
+            $array['module']['uri'] = self::$MODULE->getName().OrionContext::$MODULE_EXT;
+            $array['module']['fulluri'] = self::$MODULE->getName().OrionContext::$MODULE_EXT.OrionContext::$MODULE_URI;
+            $array['template'] = array();
+            $array['template']['name'] = self::$MODULE->getTemplate();
+            $array['template']['path'] = OrionContext::getTemplatePath(self::$MODULE->getTemplate());
+            $array['template']['abspath'] = OrionContext::getTemplateAbsolutePath(self::$MODULE->getTemplate());
+            if(self::$CONFIG->defined(strtoupper(self::getMode()) . '_MENU'))
+                $array['menu'] = self::$CONFIG->get(strtoupper(self::getMode()) . '_MENU');
+            $array['title'] = self::$CONFIG->get('SITE_NAME');
+            $array['baseurl'] = self::$CONFIG->get('BASE_URL');
+            $array['mode'] = self::$MODE;
+        }catch(Exception $e)
+        {
+            $array['error'] = 'Unable to retreive all data.';
+        }
 
         return $array;
     }
