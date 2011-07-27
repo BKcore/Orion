@@ -22,9 +22,14 @@ class HomeModule extends OrionModule
     public function _index()
     {
         $this->assign('title', 'Home');
-        $this->assign('info', "Welcome ".OrionAuth::user()->name." !");
-        $this->assign('type', 'info');
-        $this->renderView('home');
+        $this->flash('info', "Welcome ".OrionAuth::user()->name." !");
+        $this->assign('subtitle', 'Please select a module to manage.');
+        $this->renderView('admin.index');
+    }
+
+    protected function flash($type, $info)
+    {
+        $this->assign('flash', array('type'=>$type,'info'=>$info));
     }
 
     public function _error($e)
@@ -34,9 +39,8 @@ class HomeModule extends OrionModule
         else
             $msg = '';
 
-        $this->assign('info', $msg);
-        $this->assign('type', 'error');
-        $this->renderView('home');
+        $this->flash('error', $err);
+        $this->renderView('admin.index');
     }
 }
 ?>
