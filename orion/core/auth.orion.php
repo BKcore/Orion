@@ -47,10 +47,13 @@ class OrionAuth
      * <p>If login fails, a redirection occurs toward login module
      * , using /error/err_code routing.</p>
      */
-    public static function login()
+    public static function login($noredirect=false)
     {
         if(isset($_SESSION['orionauth']))
+        {
             self::$user = $_SESSION['orionauth'];
+            return true;
+        }
         else
         {
             if(isset($_POST['auth']) && isset($_POST['login']) && isset($_POST['password']))
@@ -72,21 +75,25 @@ class OrionAuth
 
                         self::$user = $session;
                         $_SESSION['orionauth'] = $session;
+                        return true;
                     }
                     else
                     {
-                        OrionContext::redirect(OrionContext::genModuleURL('login', '/error/'.self::E_PASSWORD_MISMATCH), 'default');
+                        if($noredirect) return false;
+                        else OrionContext::redirect(OrionContext::genModuleURL('login', '/error/'.self::E_PASSWORD_MISMATCH), 'default');
                     }
                 }
                 else
                 {
-                    OrionContext::redirect(OrionContext::genModuleURL('login', '/error/'.self::E_LOGIN_MISMATCH), 'default');
+                    if($noredirect) return false;
+                        else OrionContext::redirect(OrionContext::genModuleURL('login', '/error/'.self::E_LOGIN_MISMATCH), 'default');
                 }
             }
             else
             {
                 $_SESSION['orion_auth_target'] = OrionContext::getModuleURL();
-                OrionContext::redirect(OrionContext::genModuleURL('login', '', 'default'));
+                if($noredirect) return false;
+                else OrionContext::redirect(OrionContext::genModuleURL('login', '', 'default'));
             }
         }
     }
