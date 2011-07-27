@@ -188,6 +188,23 @@ abstract class OrionModule
             throw new OrionException($e->getMessage(), E_USER_WARNING, $this->name);
         }
     }
+    
+    protected function clearCache($view, $id=null)
+    {
+        try {
+            $filename = OrionContext::$PATH . Orion::MODULE_PATH . $this->name . DIRECTORY_SEPARATOR . $view . Orion::VIEW_EXT . '.tpl';
+
+            $this->tpl->clearCache($filename, $id);
+        }
+        catch(OrionException $e)
+        {
+            throw $e;
+        }
+        catch(Exception $e)
+        {
+            throw new OrionException($e->getMessage(), E_USER_WARNING, $this->name);
+        }
+    }
 
     protected function isCached($file, $cache_id=null, $template_id=null)
     {
