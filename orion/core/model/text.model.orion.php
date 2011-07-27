@@ -33,7 +33,7 @@ class OrionModelText extends OrionModelField
         else
             $tag = '';
 
-        return '<label for="'.$this->bind.'">'.$this->label.'</label><textarea name="'.$this->bind.'" class="form-textarea">'.$this->value.'</textarea>';
+        return '<div class="form-row"><label for="'.$this->bind.'">'.$this->label.'</label><div class="form-container"><textarea name="'.$this->bind.'" class="form-textarea">'.$this->value.'</textarea></div></div>';
     }
 }
 

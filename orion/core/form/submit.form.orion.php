@@ -16,7 +16,7 @@ class OrionFormSubmit extends OrionFormField
         else
             $tag = '';
 
-        return '<input name="'.$this->bind.'" type="submit" class="form-button form-submit" value="'.$this->label.'"'.$tag.'>';
+        return '<div class="form-row"><input name="'.$this->bind.'" type="submit" class="form-button form-submit" value="'.$this->label.'"'.$tag.'></div>';
     }
 }
 

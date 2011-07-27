@@ -31,8 +31,6 @@ class OrionModelImage extends OrionModelField
         if(empty($_FILES[$this->bind]['tmp_name']))
             return;
 
-        var_dump($_FILES[$this->bind]);
-
 		try {
             $this->image = new OrionUpload($this->bind, OrionUpload::IMAGE_UPLOAD_DIR);
             $this->image->restrict(OrionUpload::JPEG, OrionUpload::PNG, OrionUpload::GIF);
@@ -67,8 +65,8 @@ class OrionModelImage extends OrionModelField
         else
             $tag = '';
 
-        return '<label for="'.$this->bind.'">'.$this->label.'</label>'."\n"
-              .'<input type="file" name="'.$this->bind.'" '.$tag.'>';
+        return '<div class="form-row"><label for="'.$this->bind.'">'.$this->label.'</label>'."\n"
+              .'<div class="form-container"><input class="form-element" type="file" name="'.$this->bind.'" '.$tag.'></div></div>';
     }
 }
 

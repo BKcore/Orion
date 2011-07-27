@@ -17,7 +17,7 @@ class OrionModelBool extends OrionModelField
         else
             $tag = '';
 
-        return '<label for="'.$this->bind.'">'.$this->label.'</label><input name="'.$this->bind.'" type="checkbox" class="form-checkbox" value="1"'. ($this->value ? ' checked="checked"' : '' ) .$tag.'>';
+        return '<div class="form-row"><label for="'.$this->bind.'">'.$this->label.'</label><div class="form-container"><div class="form-element"><input name="'.$this->bind.'" type="checkbox" class="form-checkbox" value="1"'. ($this->value ? ' checked="checked"' : '' ) .$tag.'></div></div></div>';
     }
 }
 

@@ -17,7 +17,7 @@ class OrionFormMessage extends OrionFormField
         else
             $tag = '';
 
-        return '<div class="form-label">'.$this->label.'</div><div class="form-message">'.$this->value.'</div>';
+        return '<div class="form-row"><div class="form-label">'.$this->label.'</div><div class="form-container"><div class="form-message">'.$this->value.'</div></div></div>';
     }
 }
 

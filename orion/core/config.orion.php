@@ -62,7 +62,7 @@ class OrionMenuEntry
      * @param string $_module Module url wih the extension (ex: home.o)
      * @param string $_route Extra routing (ex: /page/2)
      */
-    public function  __construct($_text, $_module, $_route='')
+    public function  __construct($_text, $_module, $_route=null)
     {
         $this->text = $_text;
         $this->module = $_module;

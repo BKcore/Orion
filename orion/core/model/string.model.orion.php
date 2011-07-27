@@ -34,7 +34,7 @@ class OrionModelString extends OrionModelField
         else
             $tag = '';
 
-        return '<label for="'.$this->bind.'">'.$this->label.'</label><input name="'.$this->bind.'" type="text" class="form-text" value="'.$this->value.'"'.$tag.'>';
+        return '<div class="form-row"><label for="'.$this->bind.'">'.$this->label.'</label><div class="form-container"><input name="'.$this->bind.'" type="text" class="form-text" value="'.$this->value.'"'.$tag.'></div></div>';
     }
 }
 

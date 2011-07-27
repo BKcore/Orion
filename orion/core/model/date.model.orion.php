@@ -29,7 +29,7 @@ class OrionModelDate extends OrionModelField
         else
             $tag = '';
 
-        return ($this->current) ? '' : '<label for="'.$this->bind.'">'.$this->label.'</label><input name="'.$this->bind.'" type="text" class="form-date" value="'.$this->value.'"'.$tag.'>';
+        return ($this->current) ? '' : '<div class="form-row"><label for="'.$this->bind.'">'.$this->label.'</label><div class="form-container"><input name="'.$this->bind.'" type="text" class="form-element form-date" value="'.$this->value.'"'.$tag.'></div></div>';
     }
 }
 

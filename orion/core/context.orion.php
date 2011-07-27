@@ -119,12 +119,12 @@ class OrionContext
     }
 
     /**
-     * Generates an absolute module URL from a module name
+     * Generates an absolute module URL from a module name. 
+     * For example: genModuleURL('home','/page/1','admin'); will generate 'http://mysite.com/pathtoapp/home.a/page/1'
      * @param string $module Example: home
      * @param string $uri Example: /page/1
      * @param string $mode Example admin
      * @return string
-     * @example genModuleURL('home','/page/1','admin'); will generate 'http://mysite.com/pathtoapp/home.a/page/1'
      */
     public static function genModuleURL($module, $uri=null, $mode=null)
     {
@@ -203,6 +203,15 @@ class OrionContext
     public static function getModulePath()
     {
         return Orion::base().Orion::MODULE_PATH.self::$MODULE_NAME.DIRECTORY_SEPARATOR;
+    }
+    
+    /**
+     * Get current module's absolute path (with trailing slash)
+     * @return string
+     */
+    public static function getModuleAbsolutePath()
+    {
+        return Orion::config()->get('BASE_URL') . Orion::base().Orion::MODULE_PATH.self::$MODULE_NAME.DIRECTORY_SEPARATOR;
     }
 
     /**

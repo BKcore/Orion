@@ -17,6 +17,16 @@ class OrionModelInteger extends OrionModelField
         $this->required = $required;
         $this->primary = $primary;
     }
+
+    public function toHtml($XHTML=true)
+    {
+        if($XHTML)
+            $tag = ' /';
+        else
+            $tag = '';
+
+        return '<div class="form-row"><label for="'.$this->bind.'">'.$this->label.'</label><div class="form-container"><input name="'.$this->bind.'" type="text" class="form-text" value="'.$this->value.'"'.$tag.'></div></div>';
+    }
 }
 
 ?>

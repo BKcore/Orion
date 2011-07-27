@@ -154,9 +154,9 @@ abstract class OrionModel
      */
     private $_LAST_JOINED_TABLE=null;
 
-    public function  __construct()
+    public function  __construct($bindOnLoad=true)
     {
-        $this->bindAll();
+        if($bindOnLoad) $this->bindAll();
     }
 
     /**
@@ -371,9 +371,9 @@ abstract class OrionModel
             throw new OrionException('Missing argument in AND where clause', E_USER_WARNING, get_class($this));
 
         if(array_key_exists($field, $this->_FIELDS))
-            $this->_AWHERE = array($field, $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
+            $this->_AWHERE[] = array($field, $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
         else
-            $this->_AWHERE = array($field, $comparator, "'".$this->escape($value)."'");
+            $this->_AWHERE[] = array($field, $comparator, "'".$this->escape($value)."'");
 
         return $this;
     }
@@ -390,9 +390,9 @@ abstract class OrionModel
             throw new OrionException('Missing argument in OR where clause', E_USER_WARNING, get_class($this));
 
         if(array_key_exists($field, $this->_FIELDS))
-            $this->_OWHERE = array($field, $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
+            $this->_OWHERE[] = array($field, $comparator, $this->_FIELDS[$field]->prepare($this->escape($value)));
         else
-            $this->_OWHERE = array($field, $comparator, "'".$this->escape($value)."'");
+            $this->_OWHERE[] = array($field, $comparator, "'".$this->escape($value)."'");
 
         return $this;
     }
@@ -420,7 +420,7 @@ abstract class OrionModel
 	 */
 	public function &join($link, $fields, $type='LEFT')
 	{
-		if(!$this->_FIELDS[$link]->isLinked())
+		if(!array_key_exists($link, $this->_FIELDS) || !$this->_FIELDS[$link]->isLinked())
 			throw new OrionException('Cannot join ['.$link.'], field is not linked in model.', E_USER_WARNING, get_class($this));
 		
 		if($fields == null || !is_array($fields))
@@ -877,7 +877,10 @@ abstract class OrionModel
 			if(!isset($object->{$field}))
 			{
 				$lClass = $this->_FIELDS[$field]->getModel();
-				$object->{$field} = new $lClass();
+				$ch = new $lClass();
+                $oClass = $ch->getObjectClass();
+                $object->{$field} = new $oClass();
+                $ch = null;
 			}
 			$object->{$field}->{$subfield} = $value;
 			unset($object->{$key});
@@ -894,6 +897,15 @@ abstract class OrionModel
 			$this->parseJoinFields($array[$i]);
 		}
 	}
+
+    /**
+     * Retreive corresponding object class
+     * @return string
+     */
+    public function getObjectClass()
+    {
+        return $this->_CLASS;
+    }
 
     /**
      * Retreive all fields

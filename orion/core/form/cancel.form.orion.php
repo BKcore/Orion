@@ -16,7 +16,7 @@ class OrionFormCancel extends OrionFormField
         else
             $tag = '';
 
-        return '<input name="'.$this->bind.'" type="button" onclick="javascript:history.go(-1);" class="form-button form-cancel" value="'.$this->label.'"'.$tag.'>';
+        return '<div class="form-row"><input name="'.$this->bind.'" type="button" onclick="javascript:history.go(-1);" class="form-button form-cancel" value="'.$this->label.'"'.$tag.'></div>';
     }
 }
 
