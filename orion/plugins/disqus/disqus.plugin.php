@@ -33,16 +33,14 @@ class DisqusPlugin
         self::$TPL =& $args['tpl'];
         
         $script = '<script type="text/javascript">
+                    //<![CDATA[
                     var disqus_shortname = "'.$shortname.'";
                     var disqus_identifier = "'.$args['id'].'";
                     var disqus_url = "'.$args['permalink'].'";
 					'.$dev.'
-                    (function() {
-                        var dsq = document.createElement("script"); dsq.type = "text/javascript"; dsq.async = true;
-                        dsq.src = "http://" + disqus_shortname + ".disqus.com/embed.js";
-                        (document.getElementsByTagName("head")[0] || document.getElementsByTagName("body")[0]).appendChild(dsq);
-                    })();
-                </script>';
+                    //]]>
+                </script>
+                <script type="text/javascript" src="http://'.$shortname.'.disqus.com/embed.js" async></script>';
 
         self::$TPL->addJs($script);
         

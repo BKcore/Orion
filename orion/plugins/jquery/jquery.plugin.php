@@ -10,7 +10,7 @@ class jQueryPlugin
 {
     const CLASS_NAME = 'jQueryPlugin';
 
-    const JQUERY_FILE = 'http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js';
+    const JQUERY_FILE = 'jquery.min.js'; // 'http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js';
 
     private static $TPL = null;
     public static $path;
@@ -26,7 +26,7 @@ class jQueryPlugin
 
         self::$TPL =& $args['tpl'];
         
-        self::$TPL->includeJS(self::JQUERY_FILE);
+        self::$TPL->includeJS(OrionContext::getPluginURL('jquery') . self::JQUERY_FILE);
     }
 
     /**
@@ -42,15 +42,19 @@ class jQueryPlugin
         if($whenDocumentReady)
         {
             $script = '<script type="text/javascript">
+                //<![CDATA[
                 $(document).ready(function(){
                     '.$script.'
                 });
+                //]]>
                 </script>';
         }
         else
         {
             $script = '<script type="text/javascript">
+                //<![CDATA[
                     '.$script.'
+                //]]>
                 </script>';
         }
         self::$TPL->addJs($script);
