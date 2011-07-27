@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Template test</title>
+<link type="text/css" rel="stylesheet" href="css/admin.style.css" />
+</head>
+
+<body>
+<div class="flash">
+</div> 
+<div id="header">
+	<div id="header-top">
+		<div class="global-container">
+			<h1 id="header-logo">
+				Orion administration
+			</h1>
+			<div id="header-nav">
+				<span>Logged in as Thibaut - </span>
+				<a href="#">Log out</a> - 
+				<a href="#">View website</a>
+			</div>
+			<div class="clearfix"> </div>
+		</div>
+	</div>
+	<div id="header-menu">
+		<div class="global-container">
+			<a href="#" class="active">Item 1</a>
+			<a href="#">Item 2</a>
+			<a href="#">Item 3</a>
+		</div>
+	</div>
+	<div id="header-submenu">
+		<div class="global-container">
+			<a href="#">Subitem 1</a>
+			<a href="#">Subitem 2</a>
+			<a href="#">Subitem 3</a>
+		</div>
+	</div>
+</div>
+<div id="global">
+	<div id="main">
+		<div class="global-container">
+			<div class="form">
+			<div class="dataheader">New item</div>
+				<form name="form_post" method="post" action="#" enctype="multipart/form-data"> 
+					<div class="form-row">
+						<label for="category">Category</label>
+						<div class="form-container">
+							<select class="form-element" name="category"> 
+							<option value="3">Advertisement</option> 
+							<option value="5">CG Art</option> 
+							<option value="4">Photography</option> 
+							<option value="1">Programming</option> 
+							<option value="2" selected="selected">Web design</option> 
+							</select> 
+						</div>
+					</div>
+					<input name="id" type="hidden" value="16" /> 
+					<div class="form-row">
+						<label for="title">Title</label><div class="form-container"><input name="title" type="text" class="form-text" value="Vistart" /> </div>
+					</div>
+					<div class="form-row">
+						<label for="url">Url tag</label><div class="form-container"><input name="url" type="text" class="form-text" value="vistart" /> </div>
+					</div>
+					<div class="form-row">
+						<label for="external">External link</label><div class="form-container"><input name="external" type="text" class="form-text" value="" /> </div>
+					</div>
+					<div class="form-row">
+						<label for="image">Image</label> 
+						<div class="form-container"><input class="form-element" type="file" name="image"  /></div>
+					</div>		
+					<div class="form-row">
+						<label for="thumb">Thumb</label> 
+						<div class="form-container"><input class="form-element" type="file" name="thumb"  /> </div>
+					</div>
+					<div class="form-row">
+						<label for="description">Description</label><div class="form-container"><textarea name="description" class="form-textarea"><p class="ui-description-part">Old design of Vistart, a start menu replacement for Windows XP.</p>
+
+						<p class="ui-description-tools">Tools used : NetBeans, Photoshop, Wacom tablet</p></textarea> </div>
+					</div>
+						<input name="action" type="hidden" value="post_edit" /> 
+					<div class="form-row">
+						<input name="submit" type="submit" class="form-button form-submit" value="Save" /> 
+					</div>
+				</form> 
+				<div class="clearfix"> </div>
+			</div> 
+		
+			<div class="datatable"> 
+				<div class="dataheader">Latest posts</div> 
+				<table> 
+					<tr><th>Actions</th><th>Id</th><th>Url</th><th>Title</th></tr> 
+								<tr> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/16" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/16" class="action delete">Delete</a> 
+						</td> 
+						<td>16</td> 
+						<td>vistart</td> 
+						<td>Vistart</td> 
+						</tr>
+								<tr class="odd"> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/15" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/15" class="action delete">Delete</a> 
+						</td> 
+						<td>15</td> 
+						<td>pims-poster-ad-concept</td> 
+						<td>Pims poster ad concept</td> 
+						</tr>
+								<tr> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/14" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/14" class="action delete">Delete</a> 
+						</td> 
+						<td>14</td> 
+						<td>utbm-poster-convention-troll-penche</td> 
+						<td>Poster : Convention du Troll Pench� (UTBM)</td> 
+						</tr>
+								<tr class="odd"> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/13" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/13" class="action delete">Delete</a> 
+						</td> 
+						<td>13</td> 
+						<td>utbm-congres-industriel-poster</td> 
+						<td>Poster : Congr�s Industriel (UTBM)</td> 
+						</tr>
+								<tr> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/12" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/12" class="action delete">Delete</a> 
+						</td> 
+						<td>12</td> 
+						<td>utbm-congres-industriel-logo</td> 
+						<td>Logotype : Congr�s Industriel (UTBM)</td> 
+						</tr>
+								<tr class="odd"> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/11" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/11" class="action delete">Delete</a> 
+						</td> 
+						<td>11</td> 
+						<td>utbm-reflex-photography-poster-2</td> 
+						<td>Photography club poster 2 (UTBM)</td> 
+						</tr>
+								<tr> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/10" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/10" class="action delete">Delete</a> 
+						</td> 
+						<td>10</td> 
+						<td>utbm-reflex-photography-poster-1</td> 
+						<td>Photography club poster 1 (UTBM)</td> 
+						</tr>
+								<tr class="odd"> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/9" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/9" class="action delete">Delete</a> 
+						</td> 
+						<td>9</td> 
+						<td>vixinet-logo</td> 
+						<td>Logo for Vixinet</td> 
+						</tr>
+								<tr> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/8" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/8" class="action delete">Delete</a> 
+						</td> 
+						<td>8</td> 
+						<td>avatar-tribute-to-james-cameron</td> 
+						<td>Avatar : tribute to Jame Cameron</td> 
+						</tr>
+								<tr class="odd"> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/edit/7" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/post/delete/7" class="action delete">Delete</a> 
+						</td> 
+						<td>7</td> 
+						<td>nocta-rfonline-tribute</td> 
+						<td>Nocta : RFonline tribute</td> 
+						</tr>
+							</table> 
+				<div class="datalinks"> 
+					<a class="databutton" href="http://bkcreation.info/dev/portfolio.a/post/new">New post</a>
+					<a class="databutton" href="http://bkcreation.info/dev/portfolio.a/post/list">View more</a>
+				</div> 
+			</div> 
+			
+			<div class="datatable"> 
+				<div class="dataheader">Latest categories</div> 
+				<table> 
+					<tr><th>Actions</th><th>Id</th><th>Url</th><th>Name</th></tr> 
+								<tr> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/edit/5" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/delete/5" class="action delete">Delete</a> 
+						</td> 
+						<td>5</td> 
+						<td>cgart</td> 
+						<td>CG Art</td> 
+						</tr>
+								<tr class="odd"> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/edit/4" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/delete/4" class="action delete">Delete</a> 
+						</td> 
+						<td>4</td> 
+						<td>photography</td> 
+						<td>Photography</td> 
+						</tr>
+								<tr> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/edit/3" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/delete/3" class="action delete">Delete</a> 
+						</td> 
+						<td>3</td> 
+						<td>ads</td> 
+						<td>Advertisement</td> 
+						</tr>
+								<tr class="odd"> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/edit/2" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/delete/2" class="action delete">Delete</a> 
+						</td> 
+						<td>2</td> 
+						<td>webdesign</td> 
+						<td>Web design</td> 
+						</tr>
+								<tr> 
+						<td class="actions"> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/edit/1" class="action edit">Edit</a> 
+							<a href="http://bkcreation.info/dev/portfolio.a/category/delete/1" class="action delete">Delete</a> 
+						</td> 
+						<td>1</td> 
+						<td>programming</td> 
+						<td>Programming</td> 
+						</tr>
+							</table> 
+				<div class="datalinks"> 
+					<a class="button" href="http://bkcreation.info/dev/portfolio.a/category/new">New category</a> 
+					<a class="button" href="http://bkcreation.info/dev/portfolio.a/category/list">View more</a> 
+				</div> 
+			</div> 
+		</div>
+	</div>
+</div>
+<div id="footer">
+	Orion administration theme by <a href="http://bkcore.com/" target="_blank">Thibaut Despoulain</a> - Proudly powered by <a href="http://orion.bkcore.com/" target="_blank">Orion</a>
+</div>
+</body>
+</html>
