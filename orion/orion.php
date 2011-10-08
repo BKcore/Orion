@@ -1,13 +1,14 @@
 <?php
+
 /**
  * Orion main class.<br />
  * Makes everything work together
- * <p>Orion core classes must be placed in core/ sub directory and
- * respect Orion's class naming convention.<br/>
- * {lower(classname)}.orion.php</p>
  * 
- * <p>Copyright (c) 2008-2011, Thibaut Despoulain
- * All rights reserved.</p>
+ * <p>Usage : $o = new Orion(); $o->configure('main'); $o->run();
+ * 
+ * <p>Copyright (c) 2010-2012, Thibaut Despoulain
+ * All rights reserved.
+ * http://orion.bkcore.com/</p>
  *
  * <p>Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,18 +37,22 @@
  * 
  * 
  * @author Thibaut Despoulain
- * @copyright 2006-2011, Thibaut Despoulain
+ * @copyright 2010-2012, Thibaut Despoulain
  * @link http://orion.bkcore.com/
- * @version 0.2.11
+ * @version 0.11.10
  *
  * @license BSD 4-clauses
  */
-define('DS', DIRECTORY_SEPARATOR);
-define('FS', '.');
+define( 'FS', '.' );
+if( !defined( 'DS' ) ) define( 'DS', DIRECTORY_SEPARATOR );
 
 class Orion
 {
-    const CLASS_NAME = 'Orion';
+    const BASE_NS = '\\Orion\\';
+    const CONF_NS = '\\Orion\\Configs\\';
+    const MODULE_NS = '\\Orion\\Modules\\';
+    const PLUGIN_NS = '\\Orion\\Plugins\\';
+    const MODEL_NS = '\\Orion\\Models\\';
     /**
      * Class base
      */
@@ -61,6 +66,14 @@ class Orion
      */
     const CONF_PATH = 'configs/';
     /**
+     * Reslative path to Orion's third-party libs
+     */
+    const LIBS_PATH = 'libs/';
+    /**
+     * Relative path to Orion's global models
+     */
+    const MODEL_PATH = 'models/';
+    /**
      * Relative path to Orion's modules
      */
     const MODULE_PATH = 'modules/';
@@ -69,33 +82,13 @@ class Orion
      */
     const PLUGIN_PATH = 'plugins/';
     /**
-     * Relative path to Orion's templates
+     * Relative path to Orion's renderers
      */
     const RENDERER_PATH = 'renderers/';
     /**
-     * Orion's class extension
-     */
-    const CLASS_EXT = '.orion';
-    /**
-     * Orion's config extension
-     */
-    const CONF_EXT = '.config';
-    /**
-     * Orion's module extension
-     */
-    const MODULE_EXT = '.module';
-    /**
-     * Orion's model extension
+     * Orion's local model extension
      */
     const MODEL_EXT = '.model';
-    /**
-     * Orion's plugin extension
-     */
-    const PLUGIN_EXT = '.plugin';
-    /**
-     * Orion's renderer extension
-     */
-    const RENDERER_EXT = '.renderer';
     /**
      * Orion's template extension
      */
@@ -105,67 +98,49 @@ class Orion
      */
     const VIEW_EXT = '.view';
     /**
-     * Orion's class suffix
-     */
-    const CLASS_SUFFIX = 'Orion';
-    /**
-     * Configuration class suffix
-     */
-    const CONF_SUFFIX = 'Config';
-    /**
-     * Module class suffix
-     */
-    const MODULE_SUFFIX = 'Module';
-    /**
-     * Plugin class suffix
-     */
-    const PLUGIN_SUFFIX = 'Plugin';
-    /**
-     * Template class suffix
-     */
-    const RENDERER_SUFFIX = 'Renderer';
-    /**
      * Default mode
      */
     const MODE_DEFAULT = 'default';
+
     /**
-     * Admin mode
+     * Set Orion's debug mode
+     * @var boolean
      */
-    const MODE_ADMIN = 'admin';
+    private static $DEBUG = false;
 
     /**
      * OrionConfig accessor variable, use Orion::config() or Orion::o->getConfig() to access it.
-     * @var OrionConfig
+     * @var Orion\Core\Config
      */
-    private static $CONFIG=null;
+    private static $CONFIG = null;
 
     /**
-     * OrionModule accessor variable
-     * @var <? extends OrionModule>
+     * Module controller accessor variable
+     * @var Orion\Core\Controller
      */
-    private static $MODULE=null;
+    private static $MODULE = null;
 
     /**
-     * Path to orion's base directory ('orion/') by default
+     * Path to orion's base directory ('orion/' by default)
      * @var string
      */
     private static $BASE;
 
     /**
-     * Orion's mode (Orion::MODE_DEFAULT | Orion::MODE_ADMIN)
+     * Orion's mode 
      * @var string
      */
-     private static $MODE = 'default';
+    private static $MODE = 'default';
 
     /**
      * Start the Orion instance.<br />
      * Register Orion's spl_autoload.
      * @param string $path Path to Orion's main directory. ('orion/' by default)<br/><b>With the trailing slash but without the first.</b>
      */
-    public function  __construct($path)
+    public function __construct( $path='orion/' )
     {
         self::$BASE = $path;
-
+        date_default_timezone_set('Europe/Berlin');
         spl_autoload_register('Orion::autoload');
     }
 
@@ -173,21 +148,22 @@ class Orion
      * Load and init a new OrionConfig instance, linking it to Orion.
      * @param string $filename The configuration file to use (No path, no extension, just the name).
      */
-    public function configure($filename)
+    public function configure( $filename )
     {
-        if(self::$CONFIG == null)
+        if ( self::$CONFIG == null )
         {
-            $file = self::$BASE.self::CONF_PATH.$filename.self::CONF_EXT.".php";
-            $class = ucfirst($filename).self::CONF_SUFFIX;
-            if(file_exists($file))
+            $class = self::CONF_NS . ucfirst( $filename );
+            try
             {
-                require_once($file);
                 self::$CONFIG = new $class();
                 self::$CONFIG->load();
+            } catch ( Exception $e )
+            {
+                throw new Orion\Core\Exception( 'Configuration file does not exist.', E_USER_ERROR, get_class( $this ) );
             }
-            else throw new OrionException('Configuration file '.$filename.' does not exist.', E_USER_ERROR, self::CLASS_NAME);
         }
-        else throw new OrionException('Cannot load more than one config file.', E_USER_WARNING, self::CLASS_NAME);
+        else
+            throw new Orion\Core\Exception( 'Cannot load more than one config file.', E_USER_WARNING, get_class( $this ) );
     }
 
     /**
@@ -195,21 +171,22 @@ class Orion
      */
     public function run()
     {
-        if(self::$MODULE != null)
-            throw new OrionException('Only one Orion instance is allowed at a time.', E_USER_ERROR, self::CLASS_NAME);
-        
-        OrionContext::init(self::$BASE);
-        $module = OrionContext::$MODULE_NAME;
-        $modulefile = self::$BASE.self::MODULE_PATH.$module.DS.$module.FS.self::$MODE.'.php';
-        $moduleclass = ucfirst($module).self::MODULE_SUFFIX;
+        if ( self::$MODULE != null )
+            throw new Orion\Core\Exception( 'Only one Orion instance is allowed at a time.', E_USER_ERROR, get_class( $this ) );
 
-        if(!in_array($module, self::$CONFIG->get('OPEN_MODULES')))
-            OrionContext::redirect (404);
-            //throw new OrionException('Module ['.$module.'] is not a trusted module (see OPEN_MODULES in configuration).', E_USER_ERROR, self::CLASS_NAME);
+        Orion\Core\Context::init( self::$BASE );
 
-        if(!file_exists($modulefile))
-            OrionContext::redirect (404);
-            //throw new OrionException('Module class file ('.$modulefile.') does not exist.', E_USER_ERROR, self::CLASS_NAME);
+        $module = Orion\Core\Context::$MODULE_NAME;
+        $modulefile = self::$BASE . self::MODULE_PATH . $module . DS . $module . FS . self::$MODE . '.php';
+        $moduleclass = self::MODULE_NS . ucfirst( $module ) . '\\' . ucfirst( $module ) . ucfirst( self::$MODE );
+
+        if ( !in_array( $module, self::$CONFIG->get( 'OPEN_MODULES' ) ) )
+            Orion\Core\Context::redirect( 404 );
+        //throw new Orion\Core\Exception('Module ['.$module.'] is not a trusted module (see OPEN_MODULES in configuration).', E_USER_ERROR, get_class($this));
+
+        if ( !file_exists( $modulefile ) )
+        //Orion\Core\Context::redirect (404);
+            throw new Orion\Core\Exception( 'Module class file (' . $modulefile . ') does not exist.', E_USER_ERROR, get_class( $this ) );
 
         require_once($modulefile);
         self::$MODULE = new $moduleclass();
@@ -220,50 +197,41 @@ class Orion
      * Autoloader for Orion's core classes
      * @param string $classname
      */
-    public static function autoload($classname)
+    public static function autoload( $classname )
     {
-        try {
-            $file = self::parseClassName($classname);
-        }
-        catch (Exception $e)
+        try
+        {
+            $file = self::parseClassName( $classname );
+        } catch ( Exception $e )
         {
             return false;
         }
 
-        if(file_exists($file))
+        if ( file_exists( $file ) )
             require_once($file);
         else
-            throw new Exception('Class file does not exist.', E_USER_ERROR);
-        
+            return false;
+        //throw new Exception('Class file does not exist.', E_USER_ERROR);
     }
 
     /**
      * Parse a class name and transform it into its corresponding path
      * @param string $name of the class
      */
-    public static function parseClassName($name)
+    public static function parseClassName( $name )
     {
-        $path = '';
-        $subs = array();
-        $pattern = '#^'.self::CLASS_BASE.'([A-Z][a-z0-9]+)([A-Z][A-Za-z0-9]+)?$#';
+        // replace NS separator by DS separator and add extension
+        $name = str_replace( '\\', '/', strtolower( $name ) ) . '.php';
 
-        if(preg_match($pattern, $name, $subs) == 0) throw new Exception('Unrecognized class name.', E_WARNING);
-        else
-        {
-            if(!empty($subs[2]) && !empty($subs[1]))
-            {
-                $path = self::$BASE.self::CORE_PATH.strtolower($subs[1]).DS.strtolower($subs[2]).FS.strtolower($subs[1]).self::CLASS_EXT.'.php';
-            }
-            elseif(!empty($subs[1]))
-            {
-                 $path = self::$BASE.self::CORE_PATH.strtolower($subs[1]).self::CLASS_EXT.'.php';
-            }
-            else
-            {
-                throw new Exception('Unexpected autoload error.', E_WARNING);
-            }
-        }
-        return $path;
+        // remove any heading slash
+        if ( $name{0} == '/' )
+            $name = substr( $name, 1 );
+
+        // change root NS directory if Orion is not in its default directory
+        if ( substr( $name, 0, 6 ) == 'orion/' && self::$BASE != 'orion/' )
+            $name = self::$BASE . substr( $name, 6 );
+
+        return $name;
     }
 
     /**
@@ -276,7 +244,7 @@ class Orion
 
     /**
      * Config class accessor
-     * @return <? extends OrionConfig>
+     * @return Orion\Core\Config
      */
     public static function &config()
     {
@@ -285,41 +253,11 @@ class Orion
 
     /**
      * Current module accessor
-     * @return <? extends OrionModule>
+     * @return Orion\Core\Controller
      */
     public static function &module()
     {
         return self::$MODULE;
-    }
-
-    /**
-     * Get important context data as an array (useful for template hydratation)
-     */
-    public static function getDataArray()
-    {
-        $array = array();
-        try {
-            $array['module'] = array();
-            $array['module']['name'] = self::$MODULE->getName();
-            $array['module']['path'] = OrionContext::getModulePath();
-            $array['module']['url'] = OrionContext::getModuleURL(self::$MODULE->getName());
-            $array['module']['uri'] = self::$MODULE->getName().OrionContext::$MODULE_EXT;
-            $array['module']['fulluri'] = self::$MODULE->getName().OrionContext::$MODULE_EXT.OrionContext::$MODULE_URI;
-            $array['template'] = array();
-            $array['template']['name'] = self::$MODULE->getTemplate();
-            $array['template']['path'] = OrionContext::getTemplatePath(self::$MODULE->getTemplate());
-            $array['template']['abspath'] = OrionContext::getTemplateAbsolutePath(self::$MODULE->getTemplate());
-            if(self::$CONFIG->defined(strtoupper(self::getMode()) . '_MENU'))
-                $array['menu'] = self::$CONFIG->get(strtoupper(self::getMode()) . '_MENU');
-            $array['title'] = self::$CONFIG->get('SITE_NAME');
-            $array['baseurl'] = self::$CONFIG->get('BASE_URL');
-            $array['mode'] = self::$MODE;
-        }catch(Exception $e)
-        {
-            $array['error'] = 'Unable to retreive all data.';
-        }
-
-        return $array;
     }
 
     /**
@@ -329,9 +267,9 @@ class Orion
      * @example If mode is set to Orion::MODE_<MODE>, the menu will be loaded with Orion::config()->get('<MODE>_MENU');
      * @param string Mode
      */
-    public static function setMode($mode)
+    public static function setMode( $mode )
     {
-        self::$MODE = strtolower($mode);
+        self::$MODE = strtolower( $mode );
     }
 
     /**
@@ -343,5 +281,16 @@ class Orion
         return self::$MODE;
     }
 
+    public static function debug()
+    {
+        self::$DEBUG = true;
+    }
+
+    public static function isDebug()
+    {
+        return self::$DEBUG;
+    }
+
 }
+
 ?>

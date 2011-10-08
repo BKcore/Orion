@@ -6,73 +6,96 @@
  * @license BSD 4-clauses
  * @version 0.2.11
  */
-class LoginModule extends OrionModule
+namespace Orion\Modules\Login;
+ 
+use \Orion\Core;
+use \Orion\Models;
+
+class LoginDefault extends Core\Controller\Template
 {
     protected $name = "login";
-    protected $renderer = OrionRenderer::SMARTY;
+    protected $renderer = Core\Renderer::SMARTY;
     protected $template = 'orion-login';
 
     public function  __construct()
     {
-        $this->route = new OrionRoute();
-        $this->route->addRule('/error/?', 'error');
-        $this->route->addRule('/logout', 'logout');
-        $this->route->addRule('/do', 'login');
-        $this->route->addRule('/index', 'index');
+        $this->route = new Core\Route();
+        //$this->route->addRule('install', 'install');
+        $this->route->addRule('error/?', 'error');
+        $this->route->addRule('logout', 'logout');
+        $this->route->addRule('do', 'login');
+        $this->route->addRule('login', 'index');
+        $this->route->addRule('index', 'index');
     }
 
     public function _index()
     {
-        if(OrionAuth::logged())
-            OrionContext::redirect(OrionContext::genURL(Orion::config()->get('DEFAULT_LOGGED_PAGE')));
+        if(Core\Auth::logged())
+            Core\Context::redirect(Core\Context::genURL(\Orion::config()->get('DEFAULT_LOGGED_PAGE')));
         $this->assign('title', 'Login');
-        $this->renderView('login');
+        $this->assign('target', Core\Context::genModuleURL('login', 'do'));
+        $this->renderView('views/login');
     }
 
     public function _logout()
     {
-        OrionAuth::logout();
+        Core\Auth::logout();
         $this->assign('type', 'info');
         $this->assign('info', 'Successfully logged out.');
-        $this->renderView('login');
+        $this->renderView('views/login');
     }
 
     public function _login()
     {
         try
         {
-            OrionAuth::login();
-            if(isset($_SESSION['orion_auth_target']))
+            Core\Auth::login();
+            if(isset($_SESSION['orion_auth_target']) && $_SESSION['orion_auth_target'] != Core\Context::genModuleURL($this->name))
             {
                 $target = $_SESSION['orion_auth_target'];
                 unset($_SESSION['orion_auth_target']);
-                OrionContext::redirect($_SESSION['orion_auth_target']);
+                Core\Context::redirect($target);
             }
             else
-                OrionContext::redirect(OrionContext::genURL(Orion::config()->get('DEFAULT_LOGGED_PAGE')));
+                Core\Context::redirect(Core\Context::genURL(\Orion::config()->get('DEFAULT_LOGGED_PAGE')));
         }
-        catch (OrionException $e)
+        catch (Core\Exception $e)
         {
             $this->assign('info', $e->getMessage());
             $this->assign('type', 'error');
         }
-        $this->renderView('login');
+        $this->renderView('views/login');
     }
 
+    /**
+     * Quick administrator account creation
+     * Run mysite.com/login/install.html once then comment this route/method.
+     *
+    public function _install()
+    {
+        $admin = new Models\Auth\User();
+        $admin->login = 'login';
+        $admin->password = 'p4s5w0r7';
+        $admin->name = 'User Name';
+        $admin->level = 1;
+        $admin->encrypt()->save();
+        $this->respond('Administrator account created.');
+    }*/
+    
     public function _error($e)
     {
-        if($e == OrionRoute::E_NORULE)
+        if($e == Core\Route::E_NORULE)
             $msg = 'No rule match found.';
-        elseif($e == OrionAuth::E_LOGIN_MISMATCH)
+        elseif($e == Core\Auth::E_LOGIN_MISMATCH)
             $msg = 'Error, login mismatch.';
-        elseif($e == OrionAuth::E_PASSWORD_MISMATCH)
+        elseif($e == Core\Auth::E_PASSWORD_MISMATCH)
             $msg = 'Error, password mismatch.';
         else
             $msg = '';
 
         $this->assign('info', $msg);
         $this->assign('type', 'error');
-        $this->renderView('login');
+        $this->renderView('views/login');
     }
 }
 ?>
