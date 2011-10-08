@@ -89,7 +89,7 @@ class Main extends Core\Config
         $this->set('DEFAULT_MODE', 'default');
 
         // Modes default templates
-        $this->set('DEFAULT_TEMPLATE', 'purplehaze');
+        $this->set('DEFAULT_TEMPLATE', 'html5');
         $this->set('ADMIN_TEMPLATE', 'orion-admin');
 
         // Modes default menus

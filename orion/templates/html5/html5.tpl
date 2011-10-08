@@ -8,9 +8,9 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	
-	<title>This is a RESTful sample using Orion</title>
-	<meta name="description" content="RESTful appication sample written using the Orion PHP Framework.">
-	<meta name="author" content="Thibaut Despoulain">
+	<title>{block=title}{/block} {$orion.title}</title>
+	<meta name="description" content="">
+	<meta name="author" content="">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	
@@ -22,7 +22,7 @@
 {block name="flash"}{/block}
 	<div id="header-container">
 		<header class="wrapper">
-			<h1 id="title">RESTful API v0.1</h1>
+			<h1 id="title">Orion sample index</h1>
 			<nav>
 				{block name="nav"}{/block}
 			</nav>
