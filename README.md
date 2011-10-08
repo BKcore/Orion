@@ -1,9 +1,8 @@
 #Orion PHP5 Framework
 
-* [Website](http://bkcore.com)
-* [Documentation](http://bkcore.com/orion-doc/)
+* [Website](http://orion.bkcore.com)
 * Author: Thibaut Despoulain
-* Version: 0.11.07-alpha3
+* Version: 0.11.10-alpha4
 * License: BSD 4-clauses
 
 ##News
@@ -16,10 +15,4 @@ This is an early alpha version, use it at your own risks. This version is made f
 
 ##Description
 
-Orion is a lightweight PHP5 web framework designed for small-scale websites and applications.
-
-## TODO-LIST
-
-* Finalize the orion-admin theme (So we have finally something that doesn't hurt the eye)
-* Installation documentation
-* Module samples (Already a bit of labs module [WIP])
+Orion is a lightweight PHP5 web framework designed for small to medium scale websites and applications.
