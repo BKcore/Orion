@@ -1,16 +1,16 @@
 # Orion, the PHP5 Framework
 
-Intro
+Orion is a Web Framework written in PHP5.3 by [Thibaut Despoulain](http://bkcore.com), a computer engineering student at the UTBM.
 
-## Wesbite
+Orion is lightweight and fairly low-level. This means that you still have to know your ways with PHP to use it. It is not meant to auto-generate 90% of your code, for that you can use Symfony or any other high-end framework out there.
+
+Orion is meant to ease web development by automating common tasks like URL routing, database requesting and data managment. It provides an application skeletton you can quickly start working with, allowing you to directly focus on your code
+
+## Links
 
 [OrionPHP.org](http://orionphp.org)
 
-## Download
-
 [Download this framework](http://orionphp.org/download.html)
-
-## Installation
 
 [Getting started with Orion](http://orionphp.org/doc/getting-started.html)
 
