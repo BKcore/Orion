@@ -1,30 +1,37 @@
 <?php
+namespace Orion\Core;
+
 /**
+ * \Orion\Core\Route
+ * 
  * Orion Route class
  *
  * Handles routing rules and URI parsing.
  *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 0.11.12
  */
-namespace Orion\Core;
-
 class Route
 {
     /**
-     * Constants
+     * The 1024 error is passed as argument to the error method when no matching rule is found.
      */
-    const CLASS_NAME = 'OrionRoute';
     const E_NORULE = 1024;
 
     /**
      * Default method to be called if no rule match is found or if module is called without a route.
+     * /!\ This method name must be given WITHOUT the security prefix, like you would declare it inside of a route rule.
      * By default, 'index' is used.
      * @var string
      */
     private $defaultMethod = 'index';
 
+    /**
+     * Method called when no rule matches the URI.
+     * @var string 
+     */
     private $errorMethod = 'error';
 
     /**
@@ -36,14 +43,14 @@ class Route
 
 
     /**
-     * Decode current request URI into a usable OrionRouteMethod.<br />
+     * Decode current request URI into a usable RouteMethod.<br />
      * It's then possible to retreive the method to call and the arguments via the following getters:<br />
-     * OrionRouteMethod->getMethod();<br />
-     * OrionRouteMethod->getArgs();<br />
-     * OrionRouteMethod->getURI();<br />
+     * RouteMethod->getMethod();<br />
+     * RouteMethod->getArgs();<br />
+     * RouteMethod->getURI();<br />
      *
-     * @return OrionRouteMethod
-     * @see OrionRouteMethod
+     * @return RouteMethod
+     * @see RouteMethod
      */
     public function decode()
     {
@@ -115,7 +122,7 @@ class Route
      * <b>'index' method rule (blank regex) is implicit and thus doesn't needs to be added, but you can still define a 'index.html' rule mapped to the _index function.</b> Note that while the rule is implicit, the function itself as to be manualy overriden in the module.
      * @param string $regex
      * 		Must be either a PCRE regex or a custom Easy-regex<br />
-     * 		Example : 'article-?-@.html' is the Easy-regex equivalent to '#article\-(\w+)\-(\d+)\.html$#')
+     * 		Example : 'article-?-@-*.html' is the Easy-regex equivalent to '#article\-([a-zA-Z0-9_-]+)\-(\d+)-(.*?)\.html$#')
      * 		If the method has a dynamic number of arguments or facultative arguments, you have to add a rule for each possible URI.
      * @param string $method the method name to be called (without any security character, see OrionModule callback for more)
 	 */

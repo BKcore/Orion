@@ -1,25 +1,25 @@
 <?php
 
-/**
- * Orion authentification class.
- *
- * <p>No cookie session remembering feature provided.
- * I just don't like keeping sessions or password localy.</p>
- *
- * <p><b>For performance matters, roles and levels are stored into an arrayMap
- * in configuration file</b></p>
- *
- * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
- *
- * @static
- */
-
 namespace Orion\Core;
 
 use \Orion\Models;
 
+
+/**
+ * \Orion\Core\Auth
+ * 
+ * Orion authentification class.
+ *
+ * <p><b>For performance matters, roles and levels are stored into an arrayMap
+ * in configuration file</b></p>
+ *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
+ * @author Thibaut Despoulain
+ * @version 0.11.12
+ *
+ * @static
+ */
 class Auth
 {
     /**
@@ -46,6 +46,10 @@ class Auth
      * Core\Auth error : User is not verified
      */
     const E_NOT_VERIFIED = 55;
+    /**
+     * Core\Auth error : User is banned
+     */
+    const E_BANNED = 56;
 
     /**
      * User data (once logged in)
@@ -92,7 +96,14 @@ class Auth
                         if ( $noredirect )
                             return false;
                         else
-                            Context::redirect( Context::genModuleURL( \Orion::config()->get('AUTH_MODULE'), 'error-' . self::E_NOT_VERIFIED ), 'default' );
+                            Context::redirect( Context::genModuleURL( \Orion::config()->get( 'AUTH_MODULE' ), 'error-' . self::E_NOT_VERIFIED ), 'default' );
+                    }
+                    if ( Models\Auth\User::hasField( 'banned' ) && $data->banned == 1 )
+                    {
+                        if ( $noredirect )
+                            return false;
+                        else
+                            Context::redirect( Context::genModuleURL( \Orion::config()->get( 'AUTH_MODULE' ), 'error-' . self::E_BANNED ), 'default' );
                     }
                     $hash = Security::saltedHash( $_POST[ 'password' ], $_POST[ 'login' ] );
                     if ( $hash == $data->password )
@@ -101,6 +112,7 @@ class Auth
                         $session->login = $data->login;
                         $session->level = $data->level;
                         $session->name = $data->name;
+                        $session->surname = $data->surname;
                         $session->id = $data->id;
 
                         self::$user = $session;
@@ -109,21 +121,27 @@ class Auth
                     }
                     else
                     {
-                        if($noredirect) return false;
-                        else Context::redirect(Context::genModuleURL(\Orion::config()->get('AUTH_MODULE'), 'error-'.self::E_PASSWORD_MISMATCH), 'default');
+                        if ( $noredirect )
+                            return false;
+                        else
+                            Context::redirect( Context::genModuleURL( \Orion::config()->get( 'AUTH_MODULE' ), 'error-' . self::E_PASSWORD_MISMATCH ), 'default' );
                     }
                 }
                 else
                 {
-                    if($noredirect) return false;
-                        else Context::redirect(Context::genModuleURL(\Orion::config()->get('AUTH_MODULE'), 'error-'.self::E_LOGIN_MISMATCH), 'default');
+                    if ( $noredirect )
+                        return false;
+                    else
+                        Context::redirect( Context::genModuleURL( \Orion::config()->get( 'AUTH_MODULE' ), 'error-' . self::E_LOGIN_MISMATCH ), 'default' );
                 }
             }
             else
             {
-                $_SESSION['orion_auth_target'] = Context::getModuleURL();
-                if($noredirect) return false;
-                else Context::redirect(Context::genModuleURL(\Orion::config()->get('AUTH_MODULE'), 'login', 'default'));
+                $_SESSION[ 'orion_auth_target' ] = Context::getFullURL();
+                if ( $noredirect )
+                    return false;
+                else
+                    Context::redirect( Context::genModuleURL( \Orion::config()->get( 'AUTH_MODULE' ), 'do/login', 'default' ) );
             }
         }
     }
@@ -142,15 +160,19 @@ class Auth
                 return self::E_NO_DATA;
 
             $data = Models\Auth\User::get()
-                                   ->where( 'login', Query::EQUAL, $user )
-                                   ->limit( 1 )
-                                   ->fetch();
+                    ->where( 'login', Query::EQUAL, $user )
+                    ->limit( 1 )
+                    ->fetch();
 
             if ( $data != false )
             {
                 if ( Models\Auth\User::hasField( 'verified' ) && $data->verified == 0 )
                 {
                     return self::E_NOT_VERIFIED;
+                }
+                if ( Models\Auth\User::hasField( 'banned' ) && $data->banned == 1 )
+                {
+                    return self::E_BANNED;
                 }
                 $hash = Security::saltedHash( $password, $user );
                 if ( $hash == $data->password )
@@ -159,6 +181,7 @@ class Auth
                     $session->login = $data->login;
                     $session->level = $data->level;
                     $session->name = $data->name;
+                    $session->surname = $data->surname;
                     $session->id = $data->id;
 
                     self::$user = $session;
@@ -208,7 +231,7 @@ class Auth
         {
             Context::setHeaderCode( 403 );
             if ( !$noredirect )
-                Context::redirect( Context::genModuleURL( 'users', 'error-' . self::E_LEVEL_RESTRICT, 'admin' ) );
+                Context::redirect( Context::genModuleURL( 'users', 'error-' . self::E_LEVEL_RESTRICT, 'default' ) );
             return false;
         }
         else
@@ -255,8 +278,39 @@ class Auth
     }
 
     /**
+     * Refresh user data from database.
+     * 
+     * @return \Orion\Models\Auth\User or false if refresh failed.
+     */
+    public static function refreshData()
+    {
+        if ( !self::logged() )
+            return false;
+
+        $data = Models\Auth\User::get()
+                ->where( 'id', Query::EQUAL, self::$user->id )
+                ->limit( 1 )
+                ->fetch();
+
+        if ( $data == false )
+            return false;
+
+        $session = new Models\Auth\User();
+        $session->login = $data->login;
+        $session->level = $data->level;
+        $session->name = $data->name;
+        $session->surname = $data->surname;
+        $session->id = $data->id;
+
+        self::$user = $session;
+        $_SESSION[ 'orionauth' ] = $session->toArray();
+
+        return self::$user;
+    }
+
+    /**
      * Gets user data
-     * @return Core\AuthUser $user
+     * @return Models\Auth\User $user
      */
     public static function user()
     {

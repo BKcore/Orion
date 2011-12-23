@@ -1,16 +1,22 @@
 <?php
+
+namespace Orion\Core;
+
+
 /**
+ * \Orion\Core\Config
+ * 
  * Orion configuration handler class.
  * Handles configuration files loading and variable accessing
  *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 0.11.12
  */
-namespace Orion\Core;
- 
 abstract class Config
 {
+
     /**
      * The loaded configuration keys
      * @var array<string, mixed>
@@ -23,9 +29,9 @@ abstract class Config
      */
     abstract public function load();
 
-    public function  __construct()
+    public function __construct()
     {
-        $data = array();
+        $data = array( );
     }
 
     /**
@@ -33,9 +39,9 @@ abstract class Config
      * @param string $key
      * @return boolean
      */
-    public function defined($key)
+    public function defined( $key )
     {
-        return (array_key_exists($key, $this->data));
+        return (array_key_exists( $key, $this->data ));
     }
 
     /**
@@ -44,15 +50,15 @@ abstract class Config
      * @param string $key
      * @return mixed
      */
-    public function get($key)
+    public function get( $key )
     {
-        if(!array_key_exists($key, $this->data))
+        if ( !array_key_exists( $key, $this->data ) )
         {
-            throw new Exception('Unknown configuration key ['.$key.'].', E_USER_WARNING, get_class());
+            throw new Exception( 'Unknown configuration key [' . $key . '].', E_USER_WARNING, get_class() );
             return null;
         }
-        
-        return $this->data[$key];
+
+        return $this->data[ $key ];
     }
 
     /**
@@ -61,12 +67,14 @@ abstract class Config
      * @param mixed $key
      * @param mixed $value
      */
-    protected function set($key, $value)
+    protected function set( $key, $value )
     {
-        if(!is_string($key))
-            throw new Exception('Configuration key must be a string.', E_WARNING, get_class());
-        
-        $this->data[$key] = $value;
+        if ( !is_string( $key ) )
+            throw new Exception( 'Configuration key must be a string.', E_WARNING, get_class() );
+
+        $this->data[ $key ] = $value;
     }
+
 }
+
 ?>

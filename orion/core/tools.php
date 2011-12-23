@@ -1,19 +1,22 @@
 <?php
 
+namespace Orion\Core;
+
+
 /**
+ * \Orion\Core\Tools
+ * 
  * Orion tools class.
  *
- * Various function helpers
+ * Various function helpers used internally
+ *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
  *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 0.11.12
  *
  * @static
  */
-
-namespace Orion\Core;
-
 class Tools
 {
 
@@ -130,6 +133,49 @@ class Tools
     }
 
     /**
+     * Get an array of files contained in a directory (recursively)
+     * @param string $directory The directory to scan recursively.
+     * @return string[] An array of file paths
+     */
+    public static function getFiles( $directory )
+    {
+        if ( substr( $directory, -1 ) == DS )
+        {
+            $directory = substr( $directory, 0, -1 );
+        }
+        
+        if( !file_exists( $directory ) || !is_dir( $directory ) )
+            throw new Exception( 'Directory ['.Security::preventInjection ( $directory ).'] does not exist, unable to get files.' );
+        
+        $base = $directory;
+        $directoryHandle = opendir( $directory );
+        
+        $arr = array();
+
+        while ( $contents = readdir( $directoryHandle ) )
+        {
+            if ( $contents != '.' && $contents != '..' )
+            {
+                $path = $directory . DS . $contents;
+
+                if ( is_dir( $path ) )
+                {
+                    $files = self::getFiles( $base.DS.$contents );
+                    foreach($files as $file)
+                        $arr[] = $file;
+                }
+                else
+                {
+                    $arr[] = $base.DS.$contents;
+                }
+            }
+        }
+
+        closedir( $directoryHandle );
+        return $arr;
+    }
+    
+    /**
      * preg_match shortcut.
      *
      * @param String Input to test
@@ -196,7 +242,7 @@ class Tools
         if ( substr( $regex, 0, 1 ) == '#' )
             return $regex;
         else
-            return '#' . str_replace( self::$_REGEX_WILDCARDS, self::$_REGEX_WCREPLACE, str_replace( self::$_REGEX_WSAVE, self::$_REGEX_WILDCARDS, str_replace( self::$_REGEX_ESCAPED, self::$_REGEX_UNESCAPED, str_replace( self::$_REGEX_UNESCAPED, self::$_REGEX_ESCAPED, str_replace( self::$_REGEX_WILDCARDS, self::$_REGEX_WSAVE, $regex ) ) ) ) ) . '$#';
+            return '#^' . str_replace( self::$_REGEX_WILDCARDS, self::$_REGEX_WCREPLACE, str_replace( self::$_REGEX_WSAVE, self::$_REGEX_WILDCARDS, str_replace( self::$_REGEX_ESCAPED, self::$_REGEX_UNESCAPED, str_replace( self::$_REGEX_UNESCAPED, self::$_REGEX_ESCAPED, str_replace( self::$_REGEX_WILDCARDS, self::$_REGEX_WSAVE, $regex ) ) ) ) ) . '$#';
     }
 
 }

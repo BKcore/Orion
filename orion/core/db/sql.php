@@ -1,19 +1,22 @@
 <?php
 
+namespace Orion\Core\DB;
+
+
 /**
+ * \Orion\Core\DB\Sql
+ * 
  * Orion sql connector class.
  *
  * Generates a singelton PDO instance.
  *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 0.11.12
  *
  * @static
  */
-
-namespace Orion\Core\DB;
-
 class Sql implements Base
 {
     /**

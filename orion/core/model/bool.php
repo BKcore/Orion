@@ -16,6 +16,11 @@ class Bool extends Field
     {
         return false;
     }
+    
+    public function prepare($value)
+    {
+        return empty($value) ? 0 : 1;
+    }
 
     public function toHtml($XHTML=true)
     {

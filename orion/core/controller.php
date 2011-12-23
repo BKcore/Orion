@@ -1,24 +1,32 @@
 <?php
+
+namespace Orion\Core;
+
+
 /**
+ * \Orion\Core\Controller
+ * 
  * Orion controller base class.
  * 
  * Extend this class to create a new controller.
  *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 0.11.12
  */
-namespace Orion\Core;
-
 abstract class Controller
 {
+    /**
+     * Security prefix for controller methods.
+     * Each module function name must start with this prefix.
+     */
     const FUNCTION_PREFIX = '_';
     
     /**
      * Module name placeholder, used for base routing.
      * Module name must be lowercase.
-     * If module name is "module" then you can access it via BASEURL/module/.
-     * @example A GuestbookModule module name has to be guestbook
+     * If module name is "module" then you can access it via BASEURL/module(.html|/uri.html).
      * @var string
      */
     protected $name = null;
@@ -39,7 +47,7 @@ abstract class Controller
                                       ,'toString'
                                       ,'load'
                                       ,'isRestrictedFunction'
-                                      ,'setView');
+                                      ,'respond');
     
     private $FUNCTION_NAME_MATCH = '[a-zA-Z_]+';
 
@@ -49,29 +57,29 @@ abstract class Controller
      */
     public function load()
     {
-		if($this->route == null)
-		{
-            if(!\Orion::config()->defined('ROUTING_AUTO') || \Orion::config()->get('ROUTING_AUTO') == false)
-				throw new Exception('No route object found in module and automatic routing is disabled.', E_USER_ERROR, get_class($this));
-				
-			$this->route = new Route();
-			$function = $this->route->decodeAuto();
-		}
-		else
-		{
-		    $function = $this->route->decode();
-		}
+        if ( $this->route == null )
+        {
+            if ( !\Orion::config()->defined( 'ROUTING_AUTO' ) || \Orion::config()->get( 'ROUTING_AUTO' ) == false )
+                throw new Exception( 'No route object found in controller and automatic routing is disabled.', E_USER_ERROR, get_class( $this ) );
 
-        if(Tools::startWith($function->getName(), '__'))
-            throw new Exception('Trying to access a resticted function.', E_USER_ERROR, get_class($this));
+            $this->route = new Route();
+            $function = $this->route->decodeAuto();
+        }
+        else
+        {
+            $function = $this->route->decode();
+        }
 
-        if(Tools::startWith($function->getName(), self::FUNCTION_PREFIX))
-            throw new Exception('Function name in rule must be declared without function prefix '.self::FUNCTION_PREFIX.'.', E_USER_ERROR, get_class($this));
+        if ( Tools::startWith( $function->getName(), '__' ) )
+            throw new Exception( 'Trying to access a resticted function, you are not allowed to use methods starting with "__".', E_USER_ERROR, get_class( $this ) );
 
-        if(!is_callable(array($this, self::FUNCTION_PREFIX.$function->getName())))
-            Context::redirect(404);
+        if ( Tools::startWith( $function->getName(), self::FUNCTION_PREFIX ) )
+            throw new Exception( 'Function name in rule must be declared without function prefix ' . self::FUNCTION_PREFIX . '.', E_USER_ERROR, get_class( $this ) );
 
-        Tools::callClassMethod($this, self::FUNCTION_PREFIX.$function->getName(), $function->getArgs());
+        if ( !is_callable( array( $this, self::FUNCTION_PREFIX . $function->getName() ) ) )
+            Context::redirect( 404 );
+
+        Tools::callClassMethod( $this, self::FUNCTION_PREFIX . $function->getName(), $function->getArgs() );
     }
 
     /**
@@ -82,41 +90,42 @@ abstract class Controller
      *      LoginModule
      * @param string $slug the role identifier (ie: 'administrator', 'member', etc.). See your configuration file for a liste of roles and their permission level.
      */
-    public function allow($slug)
+    public function allow( $slug )
     {
         Auth::login();
-        if(!Auth::allow($slug))
+        if ( !Auth::allow( $slug ) )
         {// this exception prevents any redirection defect or hack
-            throw new Exception('Access denied', E_USER_ERROR, $this->name);
+            throw new Exception( 'Access denied', E_USER_ERROR, $this->name );
         }
     }
-    
+
     /**
      * Write response to output
      * @param mixed $output
      * @param boolean $exit 
-	 * @param int $code the status code to use
+     * @param int $code the status code to use
      */
-    public function respond($output, $exit=true, $code=null)
+    public function respond( $output, $exit=true, $code=null )
     {
-        if($code != null)
-            Context::setHeaderCode($code);
+        if ( $code != null )
+            Context::setHeaderCode( $code );
         echo $output;
-        if($exit) exit();
+        if ( $exit )
+            exit();
     }
 
     /**
-     * Security function name testing.
+     * Security function name testing. (Not used as of now)
      *
      * @param string Function name to test
-     *
+     * @deprecated
      * @see OrionSecurity
      */
-    private function isRestrictedFunction($name)
+    private function isRestrictedFunction( $name )
     {
-        return (!Tools::startWith($function, '_')
-                && Tools::match($function, $this->FUNCTION_NAME_MATCH)
-                && in_array($function, $this->RESTRICTED_FUNCTIONS));
+        return (!Tools::startWith( $function, '_' )
+                && Tools::match( $function, $this->FUNCTION_NAME_MATCH )
+                && in_array( $function, $this->RESTRICTED_FUNCTIONS ));
     }
 
     /**
@@ -127,5 +136,7 @@ abstract class Controller
     {
         return $this->name;
     }
+
 }
+
 ?>

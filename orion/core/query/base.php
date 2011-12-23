@@ -1,15 +1,18 @@
 <?php
 
-/**
- * Orion Query base interface.
- *
- * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.11.10
- */
-
 namespace Orion\Core\Query;
 
+
+/**
+ * \Orion\Core\Query\Base
+ * 
+ * Orion Query base interface.
+ *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
+ * @author Thibaut Despoulain
+ * @version 0.11.12
+ */
 interface Base
 {
     public function __construct( $model );

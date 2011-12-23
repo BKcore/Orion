@@ -1,61 +1,73 @@
 <?php
+
+namespace Orion\Core;
+
+
 /**
+ * \Orion\Core\Plugin
+ * 
  * Orion plugin class.
  * 
- * Handles plugins load and usage
+ * Handles plugins load and usage.
+ *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
  *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 0.11.12
+ * 
+ * @deprecated With current namespacing autoloading, there should be no need for this class. It's only here to assure backward compatibility.
  *
  * @static
  */
-namespace Orion\Core;
-
 class Plugin
 {
-    const CLASS_NAME = 'OrionPlugin';
 
-    private static $loaded = array();
+    private static $loaded = array( );
 
     /**
      * Loads provided plugin and call its load() function with arguments $args
      * @param string $plugin
      * @param mixed $args
      */
-    public static function load($plugin, $args=null)
+    public static function load( $plugin, $args=null )
     {
-        $plist = explode('.', $plugin);
+        $plist = explode( '.', $plugin );
 
-        if(is_string($plist)) $plist = array($plist);
+        if ( is_string( $plist ) )
+            $plist = array( $plist );
 
-        $parsed = array();
-        foreach($plist as $p)
+        $parsed = array( );
+        foreach ( $plist as $p )
         {
-            $file = Context::getPluginPath() . Tools::concatWithTrail(DS, $parsed, true) . strtolower($p) . DS . strtolower($p) . '.php';
-            $class = \Orion::PLUGIN_NS . implode('\\', $parsed) . (!empty($parsed) ? '\\' : '') . $p;
-            $pname = Tools::concatWithTrail('.', $parsed, true) . $p;
+            $file = Context::getPluginPath() . Tools::concatWithTrail( DS, $parsed, true ) . strtolower( $p ) . DS . strtolower( $p ) . '.php';
+            $class = \Orion::PLUGIN_NS . implode( '\\', $parsed ) . (!empty( $parsed ) ? '\\' : '') . $p;
+            $pname = Tools::concatWithTrail( '.', $parsed, true ) . $p;
 
 
-            if(file_exists($file))
+            if ( file_exists( $file ) )
             {
-                if(!in_array($pname, self::$loaded))
+                if ( !in_array( $pname, self::$loaded ) )
                 {
                     require_once($file);
 
-                    try {
-                        if(method_exists($class, 'load'))
-                            $class::load($args);
+                    try
+                    {
+                        if ( method_exists( $class, 'load' ) )
+                            $class::load( $args );
 
-                        self::$loaded[] = $pname;
+                        self::$loaded[ ] = $pname;
                     }
-                    catch(Exception $e) { throw $e; }
+                    catch ( Exception $e )
+                    {
+                        throw $e;
+                    }
                 }
 
-                $parsed[] = $pname;
+                $parsed[ ] = $pname;
             }
-            else throw new Exception('Plugin ['.$p.'] file does not exists : '.$file, E_USER_WARNING, self::CLASS_NAME);
+            else
+                throw new Exception( 'Plugin [' . $p . '] file does not exists : ' . $file, E_USER_WARNING, get_class() );
         }
-        
     }
+
 }

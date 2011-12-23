@@ -1,17 +1,20 @@
 <?php
 
+namespace Orion\Core;
+
+
 /**
+ * \Orion\Core\DB
+ * 
  * Orion DB connector factory.
  *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 0.11.12
  *
  * @static
  */
-
-namespace Orion\Core;
-
 class DB
 {
 
@@ -37,7 +40,7 @@ class DB
     }
 
     /**
-     * Manually close the PDO connection to database
+     * Manually close the connection to database
      * @return boolean success
      */
     public static function disconnect()

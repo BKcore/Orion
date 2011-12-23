@@ -1,22 +1,28 @@
 <?php
 
-/**
- * Orion Query factory.
- *
- * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.11.10
- */
-
 namespace Orion\Core;
 
+
+/**
+ * \Orion\Core\Query
+ * 
+ * Orion Query factory.
+ *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
+ * @author Thibaut Despoulain
+ * @version 0.11.12
+ */
 class Query
 {
+    // The following constants are used as keys to translates comparators in DB-specific query classes.
     const ASCENDING = 'ASC';
     const DESCENDING = 'DESC';
     const EQUAL = '=';
+    const NEQUAL = '!=';
     const LIKE = 'LIKE';
     const NOT = 'NOT';
+    const REGEX = 'REGEX';
 
     /**
      * (Factory) Create and return a new Query instance based on Query\Base and specific to the DB type set in configuration.

@@ -1,19 +1,23 @@
 <?php
+
 /**
  * Orion Template Controller class.
  *
  * Extend this class to create a new controller.
  *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 0.11.12
  */
+
 namespace Orion\Core\Controller;
 
 use \Orion\Core;
 
 abstract class Template extends Core\Controller
 {
+
     /**
      * Template renderer (OrionTemplate::SMARTY by default). Can be overriden in the module
      *
@@ -40,28 +44,15 @@ abstract class Template extends Core\Controller
      */
     public function load()
     {
-        if($this->tpl == null) $this->setRenderer($this->renderer);
+        if ( $this->tpl == null )
+            $this->setRenderer( $this->renderer );
 
-        if($this->template == null)
-            $this->setTemplate(Core\Context::getDefaultTemplate());
+        if ( $this->template == null )
+            $this->setTemplate( Core\Context::getDefaultTemplate() );
         else
-            $this->setTemplate($this->template);
+            $this->setTemplate( $this->template );
 
-        if($this->route == null)
-            throw new Core\Exception('No route object found in module.', E_USER_ERROR, get_class($this));
-
-        $function = $this->route->decode();
-
-        if(Core\Tools::startWith($function->getName(), '__'))
-            throw new Core\Exception('Trying to access a resticted function.', E_USER_ERROR, get_class($this));
-
-        if(Core\Tools::startWith($function->getName(), self::FUNCTION_PREFIX))
-            throw new Core\Exception('Function name in rule must be declared without function prefix '.self::FUNCTION_PREFIX.'.', E_USER_ERROR, get_class($this));
-
-        if(!is_callable(array($this, self::FUNCTION_PREFIX.$function->getName())))
-            Core\Context::redirect(404);
-
-        Core\Tools::callClassMethod($this, self::FUNCTION_PREFIX.$function->getName(), $function->getArgs());
+        parent::load();
     }
 
     /**
@@ -71,33 +62,44 @@ abstract class Template extends Core\Controller
      * @param mixed $value the value to assign
      * @param boolean $nocache if true any output of this variable will be not cached
      */
-    protected function assign($block, $content, $nocache=false)
+    protected function assign( $block, $content, $nocache=false )
     {
-        if($this->tpl == null) $this->setRenderer($this->renderer);
-        $this->tpl->assign($block, $content, $nocache);
+        if ( $this->tpl == null )
+            $this->setRenderer( $this->renderer );
+        $this->tpl->assign( $block, $content, $nocache );
     }
-    
-    protected function clearCache($view, $id=null)
-    {
-        try {
-            $filename = Core\Context::$PATH . \Orion::MODULE_PATH . $this->name . DIRECTORY_SEPARATOR . $view . \Orion::VIEW_EXT . '.tpl';
 
-            $this->tpl->clearCache($filename, $id);
+    /**
+     * Clears cache of given view
+     * @param string $view
+     * @param string $id 
+     */
+    protected function clearCache( $view, $id=null )
+    {
+        try
+        {
+            $filename = Core\Context::$PATH . \Orion::MODULE_PATH . $this->name . DIRECTORY_SEPARATOR . $view . '.tpl';
+
+            $this->tpl->clearCache( $filename, $id );
         }
-        catch(Core\Exception $e)
+        catch ( Core\Exception $e )
         {
             throw $e;
         }
-        catch(\Exception $e)
+        catch ( \Exception $e )
         {
-            throw new Core\Exception($e->getMessage(), E_USER_WARNING, $this->name);
+            throw new Core\Exception( $e->getMessage(), E_USER_WARNING, $this->name );
         }
     }
-    
-    protected function includeCSS($file)
+
+    /**
+     * Shortcuts the includeCSS method of the renderer, using a relative file path.
+     * @param string $file The CSS file path, relative to the module directory
+     */
+    protected function includeCSS( $file )
     {
         $filename = Core\Context::getModuleAbsolutePath() . $file;
-        $this->tpl->includeCSS($filename);
+        $this->tpl->includeCSS( $filename );
     }
 
     /**
@@ -106,9 +108,9 @@ abstract class Template extends Core\Controller
      * @param string $template the resource handle of the template file  or template object
      * @param mixed $id cache id to be used with this template
      */
-    protected function render($template, $id=null, $compile_id=null)
+    protected function render( $template, $id=null, $compile_id=null )
     {
-        $this->tpl->render($template, $id, $compile_id);
+        $this->tpl->render( $template, $id, $compile_id );
     }
 
     /**
@@ -119,46 +121,59 @@ abstract class Template extends Core\Controller
      * @param mixed $compile_id compile id to be used with this template
      * @param object $parent next higher level of Smarty variables
      */
-    protected function renderView($view, $id=null, $compile_id=null)
+    protected function renderView( $view, $id=null, $compile_id=null )
     {
-        try {
+        try
+        {
             $filename = Core\Context::$PATH . \Orion::MODULE_PATH . $this->name . DS . $view . '.tpl';
 
-            if(!file_exists($filename))
-                throw new Core\Exception('View file ['.$filename.'] does not exist.', E_USER_WARNING, $this->name);
+            if ( !file_exists( $filename ) )
+                throw new Core\Exception( 'View file [' . $filename . '] does not exist.', E_USER_WARNING, $this->name );
 
-            $this->tpl->renderView($filename, $this->template, $id, $compile_id);
+            $this->tpl->renderView( $filename, $this->template, $id, $compile_id );
         }
-        catch(Core\Exception $e)
+        catch ( Core\Exception $e )
         {
             throw $e;
         }
-        catch(\Exception $e)
+        catch ( \Exception $e )
         {
-            throw new Core\Exception($e->getMessage(), E_USER_WARNING, $this->name);
+            throw new Core\Exception( $e->getMessage(), E_USER_WARNING, $this->name );
         }
     }
 
-    protected function isCached($view, $cache_id=null, $template_id=null)
+    /**
+     * Tests if given view is cached
+     * @param string $view
+     * @param string $cache_id
+     * @param string $template_id
+     * @return boolean 
+     */
+    protected function isCached( $view, $cache_id=null, $template_id=null )
     {
-        try {
+        try
+        {
             $filename = Core\Context::$PATH . \Orion::MODULE_PATH . $this->name . DS . $view . '.tpl';
 
-            if(!file_exists($filename))
-                throw new Core\Exception('View file ['.$filename.'] does not exist.', E_USER_WARNING, $this->name);
+            if ( !file_exists( $filename ) )
+                throw new Core\Exception( 'View file [' . $filename . '] does not exist.', E_USER_WARNING, $this->name );
 
-            return $this->tpl->isViewCached($filename, $this->template, $cache_id, $template_id);
-    }
-        catch(Core\Exception $e)
+            return $this->tpl->isViewCached( $filename, $this->template, $cache_id, $template_id );
+        }
+        catch ( Core\Exception $e )
         {
             throw $e;
         }
-        catch(\Exception $e)
+        catch ( \Exception $e )
         {
-            throw new Core\Exception($e->getMessage(), E_USER_WARNING, $this->name);
+            throw new Core\Exception( $e->getMessage(), E_USER_WARNING, $this->name );
         }
     }
 
+    /**
+     * Get current template name
+     * @return string
+     */
     public function getTemplate()
     {
         return $this->template;
@@ -166,28 +181,35 @@ abstract class Template extends Core\Controller
 
     /**
      * Override current renderer and reset template variable
+     * @param string $renderer
      */
-    protected function setRenderer($renderer)
+    protected function setRenderer( $renderer )
     {
         $this->renderer = $renderer;
-        $this->tpl = Core\Renderer::setRenderer($renderer);
-        if($this->template != null)
-            $this->tpl->addTemplateDir(Core\Context::getTemplatePath($this->template));
-        $this->tpl->addTemplateDir(Core\Context::getModulePath());
+        $this->tpl = Core\Renderer::setRenderer( $renderer );
+        if ( $this->template != null )
+            $this->tpl->addTemplateDir( Core\Context::getTemplatePath( $this->template ) );
+        $this->tpl->addTemplateDir( Core\Context::getModulePath() );
     }
 
-    public function setTemplate($name)
+    /**
+     * Set a new template theme.
+     * @param string $name 
+     */
+    public function setTemplate( $name )
     {
-        if($name == $this->template)
+        if ( $name == $this->template )
             return false;
 
-        if(!file_exists(Core\Context::getTemplateFilePath($name)))
-            throw new Core\Exception('Template not found in ['.Core\Context::getTemplateFilePath($name).']', E_USER_WARNING, $this->name);
+        if ( !file_exists( Core\Context::getTemplateFilePath( $name ) ) )
+            throw new Core\Exception( 'Template not found in [' . Core\Context::getTemplateFilePath( $name ) . ']', E_USER_WARNING, $this->name );
 
         $this->template = $name;
-        
-        if($this->tpl != null)
-            $this->tpl->addTemplateDir(Core\Context::getTemplatePath($this->template));
+
+        if ( $this->tpl != null )
+            $this->tpl->addTemplateDir( Core\Context::getTemplatePath( $this->template ) );
     }
+
 }
+
 ?>

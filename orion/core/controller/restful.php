@@ -1,13 +1,16 @@
 <?php
+
 /**
  * Orion RESTful controller base class.
  *
  * Extend this class to create a new REST controller.
  *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 0.11.12
  */
+
 namespace Orion\Core\Controller;
 
 use \Orion\Core;
@@ -15,12 +18,12 @@ use \Orion\Core;
 abstract class Restful extends Core\Controller
 {
     const CLASS_NAME = 'OrionControllerRestful';
-    
+
     const E_LOGIN_ERROR = 2;
     const E_LOGIN_DISALLOW = 4;
     const E_ROUTE_NO = 8;
     const E_FUNCTION_NO = 16;
-    
+
     const DELETE = 'DELETE';
     const GET = 'GET';
     const POST = 'POST';
@@ -32,21 +35,29 @@ abstract class Restful extends Core\Controller
      */
     public function load()
     {
-        if($this->route == null)
-            $this->sendError(self::E_ROUTE_NO);
+        if ( $this->route == null )
+        {
+            if ( !\Orion::config()->defined( 'ROUTING_AUTO' ) || \Orion::config()->get( 'ROUTING_AUTO' ) == false )
+                $this->sendError( self::E_ROUTE_NO );
 
-        $function = $this->route->decode();
+            $this->route = new Route();
+            $function = $this->route->decodeAuto();
+        }
+        else
+        {
+            $function = $this->route->decode();
+        }
 
-        if(Core\Tools::startWith($function->getName(), '__'))
-            $this->sendError(self::E_FUNCTION_NO);
+        if ( Core\Tools::startWith( $function->getName(), '__' ) )
+            $this->sendError( self::E_FUNCTION_NO );
 
-        if(Core\Tools::startWith($function->getName(), self::FUNCTION_PREFIX))
-            $this->sendError(self::E_FUNCTION_NO);
+        if ( Core\Tools::startWith( $function->getName(), self::FUNCTION_PREFIX ) )
+            $this->sendError( self::E_FUNCTION_NO );
 
-        if(!is_callable(array($this, self::FUNCTION_PREFIX.$function->getName())))
-            $this->sendError(self::E_FUNCTION_NO);
+        if ( !is_callable( array( $this, self::FUNCTION_PREFIX . $function->getName() ) ) )
+            $this->sendError( self::E_FUNCTION_NO );
 
-        Core\Tools::callClassMethod($this, self::FUNCTION_PREFIX.$function->getName(), $function->getArgs());
+        Core\Tools::callClassMethod( $this, self::FUNCTION_PREFIX . $function->getName(), $function->getArgs() );
     }
 
     /**
@@ -57,62 +68,65 @@ abstract class Restful extends Core\Controller
      *      LoginModule
      * @param string $slug the role identifier (ie: 'administrator', 'member', etc.). See your configuration file for a liste of roles and their permission level.
      */
-    public function allow($slug)
+    public function allow( $slug )
     {
-        try {
-            if(!Core\Auth::login(true))
+        try
+        {
+            if ( !Core\Auth::login( true ) )
             {
-                $this->sendError(self::E_LOGIN_DISALLOW);
+                $this->sendError( self::E_LOGIN_DISALLOW );
             }
-            if(!Core\Auth::allow($slug))
+            if ( !Core\Auth::allow( $slug ) )
             {// this exception prevents any redirection defect or hack
-                $this->sendError(self::E_LOGIN_DISALLOW);
+                $this->sendError( self::E_LOGIN_DISALLOW );
             }
         }
-        catch(Core\Exception $e)
+        catch ( Core\Exception $e )
         {
             throw $e;
         }
     }
-	
-	/**
-	 * Gets REST PUT data
-	 */
-	public function getPutData()
-	{
-		$data = null;
-        parse_str(file_get_contents("php://input"), $data);
-        return $data;
-	}
-    
-	/**
-	 * Test method used to access the resource
-	 * @param $method POST|GET|PUT|DELETE
-	 */
-    public function isMethod($method)
+
+    /**
+     * Gets REST PUT data
+     */
+    public function getPutData()
     {
-        return ($_SERVER['REQUEST_METHOD'] == $method);
+        $data = null;
+        parse_str( file_get_contents( "php://input" ), $data );
+        return $data;
     }
-    
+
+    /**
+     * Test method used to access the resource
+     * @param $method POST|GET|PUT|DELETE
+     */
+    public function isMethod( $method )
+    {
+        return ($_SERVER[ 'REQUEST_METHOD' ] == $method);
+    }
+
     /**
      * Encodes $array to JSON format and sends it.
      * @param array $array
      * @param boolean $exit Exit after response ?
      */
-    public function send($array, $exit=true, $code=null)
+    public function send( $array, $exit=true, $code=null )
     {
-        $this->respond(json_encode($array), $exit, $code);
+        $this->respond( json_encode( $array ), $exit, $code );
     }
-    
+
     /**
      * Sends a standard {"error":X} JSON Object
      * @param int $e Error code
      */
-    public function sendError($e, $code=401)
+    public function sendError( $e, $code=401 )
     {
-        Core\Context::setHeaderCode($code);
-        $this->send(array('error' => $e));
+        Core\Context::setHeaderCode( $code );
+        $this->send( array( 'error' => $e ) );
         exit();
     }
+
 }
+
 ?>

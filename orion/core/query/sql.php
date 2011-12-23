@@ -1,17 +1,20 @@
 <?php
 
-/**
- * Orion Query for SQL DB type.
- *
- * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.11.10
- */
-
 namespace Orion\Core\Query;
 
 use \Orion\Core;
 
+
+/**
+ * \Orion\Core\Query\Sql
+ * 
+ * Orion Query for SQL DB type.
+ *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
+ * @author Thibaut Despoulain
+ * @version 0.11.10
+ */
 class Sql implements Base
 {
     /**
@@ -28,8 +31,10 @@ class Sql implements Base
 
     private static $COMPARATORS = array(
         Core\Query::EQUAL => ' = ',
+        Core\Query::NEQUAL => ' != ',
         Core\Query::LIKE => ' LIKE ',
-        Core\Query::NOT => ' NOT '
+        Core\Query::NOT => ' NOT ',
+        Core\Query::REGEX => ' REGEXP '
     );
     private static $ORDERS = array(
         Core\Query::ASCENDING => 'ASC',
@@ -64,10 +69,16 @@ class Sql implements Base
 
     /**
      * Array of key/values to update
-     * @var array<array<key, value>>
+     * @var String[String]
      */
     protected $_SETS = null;
 
+    /**
+     * Use distinct
+     * @var Boolean 
+     */
+    protected $_DISTINCT = false;
+    
     /**
      * Where clause placeholder
      * @var array<string>[3] Example: array('field', 'LIKE', '%token%');
@@ -104,7 +115,13 @@ class Sql implements Base
      * @var int
      */
     protected $_LIMIT = null;
-
+    
+    /**
+     * Group by statement field holder
+     * @var string
+     */
+    protected $_GROUPBY = null;
+    
     /**
      * Offset clause placeholder
      * @var int
@@ -129,7 +146,13 @@ class Sql implements Base
      * @var array<array[3]<string>> Each row correspond to a linked field, consisting in an array with [0] being the field name, [1] the field alias and [2] the linked object's class name for object convertion.
      */
     protected $_JOIN_COLUMNS = array( );
-
+    
+    /**
+     * Attribute storing tables joined using joinTable().
+     * @var String[][] Assoc array of [leftfield, rightfield, jointype] with tables as keys.
+     */
+    protected $_JOIN_TABLE = array();
+    
     /**
      * PDO query result
      * @var PDOStatement
@@ -186,10 +209,10 @@ class Sql implements Base
             return $this->where( $field, $comparator, $value );
 
         if ( !is_string( $field ) || !is_string( $comparator ) || $value === null )
-            throw new Exception( 'Missing argument in AND where clause' );
+            throw new Core\Exception( 'Missing argument in AND where clause' );
 
         if ( !array_key_exists( $comparator, self::$COMPARATORS ) )
-            throw new Exception( 'Unsupported comparator. Please use manualWhere() to use custom comparators.' );
+            throw new Core\Exception( 'Unsupported comparator. Please use manualWhere() to use custom comparators.' );
 
         $comparator = self::$COMPARATORS[ $comparator ];
 
@@ -205,6 +228,16 @@ class Sql implements Base
     public function &delete()
     {
         return $this->execute( 'delete' );
+    }
+    
+    /**
+     * Ignore duplicates on provided field
+     * @param String $field
+     */
+    public function &distinct()
+    {
+        $this->_DISTINCT = true;
+        return $this;
     }
 
     /**
@@ -229,7 +262,7 @@ class Sql implements Base
         }
         catch ( PDOException $e )
         {
-            throw new Exception( $e->getMessage(), $e->getCode() );
+            throw new Core\Exception( $e->getMessage(), $e->getCode() );
         }
 
         return $this->_RESULT;
@@ -257,16 +290,42 @@ class Sql implements Base
         }
         catch ( PDOException $e )
         {
-            throw new Exception( $e->getMessage(), $e->getCode() );
+            throw new Core\Exception( $e->getMessage(), $e->getCode() );
         }
 
         return $this->_RESULT;
+    }
+    
+    /**
+     * Add a GROUP BY statement on provided field
+     * @param String $col
+     */
+    public function &groupBy($col)
+    {
+        $this->_GROUPBY = $this->tablePrefix($this->escape($col));
+        
+        return $this;
+    }
+    
+    /**
+     * This method is SQL-only.
+     * Groups rows from x-to-many query by concatenating them in a sigle column.
+     * @param String $field The joined column to contact
+     * @param String $name The alias of the new column
+     * @param String $separator The separator used for concatenation
+     * @param String [$table] The table used to prefix the $field
+     */
+    public function &groupConcat( $field, $name, $separator, $table=null )
+    {
+        $this->_COLUMNS[] = 'GROUP_CONCAT(' . $this->tablePrefix( $field, false, $table ) . ' SEPARATOR ' . $this->quote( $this->escape( $separator ) ) . ') AS ' . $this->antiQuote( $name );
+    
+        return $this;
     }
 
     /**
      * Query chain element, joining provided $fields on $link.
      * This method is only usable with Query that have a model bound width linked fields.
-     * For manual joints, write the query manually using the DB class.
+     * For manual joints, use manualJoin().
      * @param string $link Either a linked field name if Query is bound to a Model or a table name otherwise.
      * @param string $fields The fields to join
      * @param string $type [LEFT|RIGHT|INNER|OUTER]
@@ -274,18 +333,18 @@ class Sql implements Base
     public function &join( $link, $fields, $type='LEFT' )
     {
         if ( $fields == null || !is_array( $fields ) )
-            throw new Exception( 'Missing array of joined fields while trying to join on [' . Core\Security::preventInjection( $link ) . '].' );
+            throw new Core\Exception( 'Missing array of joined fields while trying to join on [' . Core\Security::preventInjection( $link ) . '].' );
 
         if ( !Core\Tools::match( $type, '(left|right) ?(inner|outer)?', 'i' ) )
-            throw new Exception( 'Invalid join type while trying to join on [' . Core\Security::preventInjection( $link ) . '].' );
+            throw new Core\Exception( 'Invalid join type while trying to join on [' . Core\Security::preventInjection( $link ) . '].' );
 
         if ( !$this->hasModel() )
-            throw new Exception( 'Cannot create join query, no model bound.' );
+            throw new Core\Exception( 'Cannot create join query, no model bound.' );
 
         $model = $this->model;
 
         if ( !$model::isLinked( $link ) )
-            throw new Exception( 'Field [' . Core\Security::preventInjection( $link ) . ' is not linked in model.' );
+            throw new Core\Exception( 'Field [' . Core\Security::preventInjection( $link ) . ' is not linked in model.' );
 
         $table = $model::getField( $link )->getLinkedTable();
         $this->_LAST_JOINED_TABLE = $table;
@@ -302,6 +361,29 @@ class Sql implements Base
 
         return $this;
     }
+    
+    /**
+     * /!\ This method is experimental and should be used only if you know what you are doing.
+     * Query chain element, joining provided $table to the query.
+     * This method does not require a bound model. 
+     * But the downside is that you won't have any object formating or column aliasing, so be careful with overlaps.
+     * @param string $link A table name.
+     * @param string $leftfield The field from the current table
+     * @param string $rightfield The field from the joined table
+     * @param string $type [LEFT|RIGHT|INNER|OUTER]
+     */
+    public function &joinTable( $table, $leftfield, $rightfield, $type='LEFT' )
+    {
+        if ( empty($table) || empty($leftfield) || empty($rightfield) )
+            throw new Core\Exception( 'Missing arguments while trying to join [' . Core\Security::preventInjection( $table ) . '].' );
+
+        if ( !Core\Tools::match( $type, '(natural )?((inner|cross)|(left|right)( outer)?)?', 'i' ) )
+            throw new Core\Exception( 'Invalid join type while trying to join [' . Core\Security::preventInjection( $table ) . '].' );
+
+        $this->_JOIN_TABLE[ $table ] = array($leftfield, $rightfield, $type);
+        
+        return $this;
+    }
 
     /**
      * Query chain element, limiting the query to a given $size
@@ -310,7 +392,7 @@ class Sql implements Base
     public function &limit( $size )
     {
         if ( !is_numeric( $size ) )
-            throw new Exception( 'Invalid limit argument.' );
+            throw new Core\Exception( 'Invalid limit argument.' );
 
         $this->_LIMIT = $size;
 
@@ -325,7 +407,7 @@ class Sql implements Base
     public function &manualWhere( $clause )
     {
         if ( !is_string( $clause ) )
-            throw new Exception( 'Manual where argument is not a complete <string> where clause.' );
+            throw new Core\Exception( 'Manual where argument is not a complete <string> where clause.' );
 
         $this->_MWHERE = $clause;
 
@@ -339,7 +421,7 @@ class Sql implements Base
     public function &offset( $start )
     {
         if ( !is_numeric( $start ) )
-            throw new Exception( 'Invalid offset argument' );
+            throw new Core\Exception( 'Invalid offset argument' );
 
         $this->_OFFSET = $start;
 
@@ -354,7 +436,7 @@ class Sql implements Base
     public function &order( $fields, $mode )
     {
         if ( empty( $fields ) || empty( $mode ) )
-            throw new Exception( 'Missing parameter in order clause.' );
+            throw new Core\Exception( 'Missing parameter in order clause.' );
 
         $order = array( );
 
@@ -367,7 +449,7 @@ class Sql implements Base
                 if ( !isset( $mode[ $i ] ) )
                     $order[ $this->tablePrefix( $this->escape( $fields[ $i ] ) ) ] = $lastMode;
                 elseif ( !array_key_exists( $mode[ $i ], self::$ORDERS ) )
-                    throw new Exception( 'Unsupported order statement.' );
+                    throw new Core\Exception( 'Unsupported order statement.' );
                 else
                 {
                     $order[ $this->tablePrefix( $this->escape( $fields[ $i ] ) ) ] = $mode[ $i ];
@@ -402,10 +484,10 @@ class Sql implements Base
             return $this->where( $field, $comparator, $value );
 
         if ( !is_string( $field ) || !is_string( $comparator ) || $value === null )
-            throw new Exception( 'Missing argument in OR where clause' );
+            throw new Core\Exception( 'Missing argument in OR where clause' );
 
         if ( !array_key_exists( $comparator, self::$COMPARATORS ) )
-            throw new Exception( 'Unsupported comparator. Please use manualWhere() to use custom comparators.' );
+            throw new Core\Exception( 'Unsupported comparator. Please use manualWhere() to use custom comparators.' );
 
         $comparator = self::$COMPARATORS[ $comparator ];
 
@@ -459,12 +541,12 @@ class Sql implements Base
     public function &selectAllExcept( $data=null )
     {
         if ( !$this->hasModel() )
-            throw new Exception( 'selectAllExcept() can only be used with Query when a model is bound.' );
+            throw new Core\Exception( 'selectAllExcept() can only be used with Query when a model is bound.' );
 
         $this->_TYPE = 'select';
 
         if ( func_num_args() == 0 || $data == null )
-            throw new Exception( 'SelectAllExcept() needs at least one field as argument.' );
+            throw new Core\Exception( 'SelectAllExcept() needs at least one field as argument.' );
 
         if ( is_array( $data ) )
             $exceptCols = $data;
@@ -478,17 +560,23 @@ class Sql implements Base
                 $cols[ ] = $field;
 
         if ( empty( $cols ) )
-            throw new Exception( 'SelectAllExcept() Too many fields removed. Needs at least one field to select.' );
+            throw new Core\Exception( 'SelectAllExcept() Too many fields removed. Needs at least one field to select.' );
 
         $this->_COLUMNS = $this->tablePrefix( $this->escape( $cols ) );
 
         return $this;
     }
 
+    /** 
+     * Set columns values for insert and update queries
+     * @param string $key
+     * @param string $value
+     * @return Sql 
+     */
     public function &set( $key, $value )
     {
         if ( !is_string( $key ) )
-            throw new Exception( 'set() key must be a valid string.' );
+            throw new Core\Exception( 'set() key must be a valid string.' );
 
         $model = $this->model;
         if ( $this->hasModel() && $model::hasField( $key ) )
@@ -518,10 +606,10 @@ class Sql implements Base
     public function &where( $field, $comparator=null, $value=null )
     {
         if ( !is_string( $field ) || !is_string( $comparator ) || $value === null )
-            throw new Exception( 'Missing argument in where clause' );
+            throw new Core\Exception( 'Missing argument in where clause' );
 
         if ( !array_key_exists( $comparator, self::$COMPARATORS ) )
-            throw new Exception( 'Unsupported comparator. Please use manualWhere() to use custom comparators.' );
+            throw new Core\Exception( 'Unsupported comparator. Please use manualWhere() to use custom comparators.' );
 
         $comparator = self::$COMPARATORS[ $comparator ];
 
@@ -592,7 +680,7 @@ class Sql implements Base
         if ( is_string( $data ) )
             return '`' . $data . '`';
         else
-            throw new Exception( 'antiquote() must be applyed to strings.' );
+            throw new Core\Exception( 'antiquote() must be applyed to strings.' );
     }
 
     /**
@@ -618,6 +706,11 @@ class Sql implements Base
             return $data;
     }
 
+    /**
+     * Execute given query type using current query data
+     * @param string $type Query type ('insert', 'delete', ..etc)
+     * @return Sql 
+     */
     public function &execute( $type=null )
     {
         if ( $type != null )
@@ -628,6 +721,11 @@ class Sql implements Base
         return $this;
     }
 
+    /**
+     * Adds single quotes to a string
+     * @param stirng $string
+     * @return string
+     */
     public function quote( $string )
     {
         return "'" . $string . "'";
@@ -642,6 +740,10 @@ class Sql implements Base
         return $this->_TABLE;
     }
 
+    /**
+     * Get last joined table's name
+     * @return string
+     */
     public function getLastJoinedTable()
     {
         return $this->_LAST_JOINED_TABLE;
@@ -656,7 +758,7 @@ class Sql implements Base
         if ( is_string( $table ) )
             $this->_TABLE = $this->escape( Core\Tools::removeString( ' ', $table ) );
         else
-            throw new Exception( 'setTable() method must be given a string.' );
+            throw new Core\Exception( 'setTable() method must be given a string.' );
 
         return $this;
     }
@@ -669,14 +771,14 @@ class Sql implements Base
     public function &unsetTable( $dontUseModel=false )
     {
         if ( !$this->hasModel() )
-            throw new Exception( 'Unable to unset table on Query with no bound Model.' );
+            throw new Core\Exception( 'Unable to unset table on Query with no bound Model.' );
         else
         {
             $model = $this->model;
             if ( is_string( $model::getTable() ) )
                 $this->_TABLE = $model::getTable();
             else
-                throw new Exception( 'Cannot revert table to model table, varable is not a string.' );
+                throw new Core\Exception( 'Cannot revert table to model table, varable is not a string.' );
         }
 
         return $this;
@@ -695,10 +797,10 @@ class Sql implements Base
      * Get current query string
      * @return string current query string
      */
-    protected function getQuery()
+    public function getQuery()
     {
         if ( $this->_TABLE == null )
-            throw new Exception( 'Unable to perform query, no table provided.' );
+            throw new Core\Exception( 'Unable to perform query, no table provided.' );
 
         if ( $this->hasModel() )
             $this->unsetTable();
@@ -729,6 +831,9 @@ class Sql implements Base
         {
             case 'select':
                 $query = "SELECT ";
+                if ($this->_DISTINCT)
+                    $query .= 'DISTINCT ';
+                            
                 $query .= implode( ', ', $this->_COLUMNS );
 
                 foreach ( $this->_JOIN_COLUMNS as $col )
@@ -738,15 +843,22 @@ class Sql implements Base
 
                 if ( !empty( $this->_JOIN ) )
                     if ( !$this->hasModel() )
-                        throw new Exception( 'Trying to execute a join query with no model bound.' );
+                        throw new Core\Exception( 'Trying to execute a join query with no model bound.' );
                     else
                         $model = $this->model;
 
                 foreach ( $this->_JOIN as $key => $data )
                     $query .= " " . strtoupper( $data[ 1 ] ) . " JOIN " . $this->antiQuote( $data[ 0 ] ) . " ON " . $this->tablePrefix( $model::getField( $key )->getBinding() ) . "=" . $this->tablePrefix( $model::getField( $key )->getRightfield(), false, $data[ 0 ] );
 
+                foreach ( $this->_JOIN_TABLE as $table => $data )
+                    $query .= " " . strtoupper( $data[ 2 ] ) . " JOIN " . $this->antiQuote( $table ) . " ON " . $this->tablePrefix( $data[0] ) . "=" . $this->tablePrefix( $data[ 1 ], false, $table );
+                
                 if ( $where != null )
                     $query .= " WHERE " . $where;
+                
+                if( $this->_GROUPBY != null)
+                    $query .= " GROUP BY ".$this->_GROUPBY;
+                
                 if ( !empty( $this->_ORDER ) )
                 {
                     $order = array( );
@@ -762,7 +874,7 @@ class Sql implements Base
 
             case 'insert':
                 if ( empty( $this->_DATA ) )
-                    throw new Exception( 'Missing row data in insert query.' );
+                    throw new Core\Exception( 'Missing row data in insert query.' );
 
                 $query = "INSERT INTO `" . $this->_TABLE . "`";
 
@@ -773,7 +885,7 @@ class Sql implements Base
 
             case 'update':
                 if ( empty( $this->_DATA ) )
-                    throw new Exception( 'Missing row data in update query.' );
+                    throw new Core\Exception( 'Missing row data in update query.' );
 
                 $query = "UPDATE `" . $this->_TABLE . "`";
 
@@ -784,7 +896,7 @@ class Sql implements Base
                 $query .= " SET " . implode( ', ', $sets );
 
                 if ( $where == null )
-                    throw new Exception( 'Update query must have a where clause.' );
+                    throw new Core\Exception( 'Update query must have a where clause.' );
                 else
                     $query .= " WHERE " . $where;
 
@@ -796,7 +908,7 @@ class Sql implements Base
                 $query = "DELETE FROM `" . $this->_TABLE . "`";
 
                 if ( $where == null )
-                    throw new Exception( 'Delete query must have a where clause.', E_USER_WARNING, get_class( $this ) );
+                    throw new Core\Exception( 'Delete query must have a where clause.', E_USER_WARNING, get_class( $this ) );
                 else
                     $query .= " WHERE " . $where;
 
@@ -805,7 +917,7 @@ class Sql implements Base
                 break;
 
             default:
-                throw new Exception( 'Unknown query type.', E_USER_WARNING, get_class( $this ) );
+                throw new Core\Exception( 'Unknown query type.', E_USER_WARNING, get_class( $this ) );
                 break;
         }
 

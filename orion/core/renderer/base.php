@@ -1,18 +1,21 @@
 <?php
 
+namespace Orion\Core\Renderer;
+
+
 /**
+ * \Orion\Core\Renderer\Base
+ * 
  * Orion Renderer base interface.
  * 
  * If your template engine does not support one of those methods, you still have to define them. 
  * Just put the default return value inside them for compatibility.
  *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.11.10
+ * @version 0.11.12
  */
-
-namespace Orion\Core\Renderer;
-
 interface Base
 {
     public function __construct();

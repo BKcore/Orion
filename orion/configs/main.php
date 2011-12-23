@@ -30,9 +30,10 @@ class Main extends Core\Config
         $this->set('SQL_PASSWORD', 'pass');
         
         // Roles for authentification purpose
-        $this->set('AUTH_ROLES', array('administrator'  => 1
-                                      ,'member'         => 10
-                                      ,'visitor'        => 100));
+        $this->set('AUTH_ROLES', array('administrator' => 1
+                                      ,'staff'         => 10
+                                      ,'moderator'     => 50
+                                      ,'user'          => 100));
 
         // User DB table for authentification
         $this->set('AUTH_TABLE_USER', 'orion_auth_users');
@@ -53,8 +54,9 @@ class Main extends Core\Config
         $this->set('MODULE_SEPARATOR', '/');
 
         // Default 404 error document URL
-        $this->set('URL_404', array('default' => 'http://yourwebsite.com/404.html',
-                                    'admin' => 'http://yourwebsite.com/404.html'));
+        $this->set('URL_404', array('default' => 'http://127.0.0.1/orion/404.html',
+                                    'admin' => 'http://127.0.0.1/orion/404.html',
+                                    'json' => 'http://127.0.0.1:8080/neta/404.json'));
 
         // Base upload folder (needs rw+ access)
         $this->set('UPLOAD_DIR', 'orion/uploads/');
@@ -69,10 +71,10 @@ class Main extends Core\Config
         $this->set('TEMPLATE_PATH', 'orion/templates/');
         
         // Absolute template folder path (for css and tpl variables), prevents url rewrite issues.
-        $this->set('TEMPLATE_ABS_PATH', 'http://orion.bkcore.com/orion/templates/');
+        $this->set('TEMPLATE_ABS_PATH', 'http://yourwebsite.com/anydir/orion/templates/');
 
         // Open modules list (security)
-        $this->set('OPEN_MODULES', array('index', 'login', 'settings'));
+        // $this->set('OPEN_MODULES', array('index', 'login', 'settings'));
 
         // Default module (when no module uri is provided, aka root module)
         $this->set('DEFAULT_MODULE', 'index');

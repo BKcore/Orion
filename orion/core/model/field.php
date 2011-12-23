@@ -7,6 +7,8 @@ namespace Orion\Core\Model;
  *
  * Extend this abstract class when creating a new model field class. (Customfield extends Field). 
  * <b>Be sure to specify at least $bind and $type attributes</b>
+ *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
  */
 abstract class Field
 {

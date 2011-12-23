@@ -1,51 +1,43 @@
 <?php
 
+define( 'FS', '.' );
+if( !defined( 'DS' ) ) define( 'DS', DIRECTORY_SEPARATOR );
+
 /**
- * Orion main class.<br />
+ * \Orion
+ * 
+ * Orion main class.
  * Makes everything work together
  * 
  * <p>Usage : $o = new Orion(); $o->configure('main'); $o->run();
  * 
  * <p>Copyright (c) 2010-2012, Thibaut Despoulain
- * All rights reserved.
- * http://orion.bkcore.com/</p>
+ * http://orionphp.org/</p>
  *
- * <p>Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *    This product includes software developed by the <organization>.
- * 4. Neither the name of the <organization> nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.</p>
- *
- * <p>THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+ * <p>Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.</p>
  * 
  * 
  * @author Thibaut Despoulain
  * @copyright 2010-2012, Thibaut Despoulain
- * @link http://orion.bkcore.com/
- * @version 0.11.10
- *
- * @license BSD 4-clauses
+ * @link http://orionphp.org/
+ * @version 0.11.12 beta1
  */
-define( 'FS', '.' );
-if( !defined( 'DS' ) ) define( 'DS', DIRECTORY_SEPARATOR );
-
 class Orion
 {
     const BASE_NS = '\\Orion\\';
@@ -86,17 +78,9 @@ class Orion
      */
     const RENDERER_PATH = 'renderers/';
     /**
-     * Orion's local model extension
-     */
-    const MODEL_EXT = '.model';
-    /**
      * Orion's template extension
      */
     const TEMPLATE_EXT = '.tpl';
-    /**
-     * Orion's view extension
-     */
-    const VIEW_EXT = '.view';
     /**
      * Default mode
      */
@@ -180,13 +164,13 @@ class Orion
         $modulefile = self::$BASE . self::MODULE_PATH . $module . DS . $module . FS . self::$MODE . '.php';
         $moduleclass = self::MODULE_NS . ucfirst( $module ) . '\\' . ucfirst( $module ) . ucfirst( self::$MODE );
 
-        if ( !in_array( $module, self::$CONFIG->get( 'OPEN_MODULES' ) ) )
+        if (self::$CONFIG->defined( 'OPEN_MODULES' ) && !in_array( $module, self::$CONFIG->get( 'OPEN_MODULES' ) ) )
             Orion\Core\Context::redirect( 404 );
         //throw new Orion\Core\Exception('Module ['.$module.'] is not a trusted module (see OPEN_MODULES in configuration).', E_USER_ERROR, get_class($this));
 
         if ( !file_exists( $modulefile ) )
-        //Orion\Core\Context::redirect (404);
-            throw new Orion\Core\Exception( 'Module class file (' . $modulefile . ') does not exist.', E_USER_ERROR, get_class( $this ) );
+            Orion\Core\Context::redirect (404);
+            //throw new Orion\Core\Exception( 'Module class file (' . $modulefile . ') does not exist.', E_USER_ERROR, get_class( $this ) );
 
         require_once($modulefile);
         self::$MODULE = new $moduleclass();
@@ -261,10 +245,8 @@ class Orion
     }
 
     /**
-     * Set Orion's mode ('main'|'admin'). You can use Orion::MODE_DEFAULT or Orion::MODE_ADMIN constants.
-     * <p>Modes are used to determinate which menu and context to use</p>
+     * Set Orion's mode.
      * Default mode is 'default'
-     * @example If mode is set to Orion::MODE_<MODE>, the menu will be loaded with Orion::config()->get('<MODE>_MENU');
      * @param string Mode
      */
     public static function setMode( $mode )

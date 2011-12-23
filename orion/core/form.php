@@ -1,25 +1,24 @@
 <?php
 
-/**
- * Orion form class.
- *
- * Form creation helper
- *
- * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
- */
 
 namespace Orion\Core;
 
 define( "NEWLINE", "\n" );
 
+/**
+ * \Orion\Core\Form
+ * 
+ * Orion form class.
+ *
+ * Form creation helper
+ *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
+ * @author Thibaut Despoulain
+ * @version 0.11.12
+ */
 class Form
 {
-    /**
-     * Class name
-     */
-    const CLASS_NAME = 'OrionForm';
 
     /**
      * Hidden input type
@@ -80,13 +79,13 @@ class Form
 
     /**
      * Model handler
-     * @var OrionModel
+     * @var Orion\Core\Model
      */
     private $model = null;
 
     /**
-     * Array of OrionFormFields, used to store form fields as Data Object
-     * @var array<OrionFormField>
+     * Array of Orion\Core\Form\Field's, used to store form fields as Data Object
+     * @var array<Orion\Core\Form\Field>
      */
     private $fields = array( );
 
@@ -129,9 +128,9 @@ class Form
     /**
      * Add a new field to the form.
      * These functions can be chained like $form->add(...)->add(...) etc.
-     * @param OrionModelField $field
+     * @param Orion\Core\ModelField $field
      * @param mixed $value
-     * @return OrionForm instance
+     * @return Orion\Core\Form instance
      */
     public function &add( $field, $value=null )
     {
@@ -150,9 +149,9 @@ class Form
      * Add a new field to the form before given element.
      * These functions can be chained like $form->add(...)->add(...) etc.
      * @param string Name of the element before which the field will be added.
-     * @param OrionModelField $field
+     * @param Orion\Core\Model\Field $field
      * @param mixed $value
-     * @return OrionForm instance
+     * @return Orion\Core\Form instance
      */
     public function &addBefore( $element, $field, $value=null )
     {
@@ -176,7 +175,7 @@ class Form
     public function &addField( $fieldname, $value=null )
     {
         if ( $this->model == null )
-            throw new Exception( 'You need to provide a correct OrionModel before using addField()', E_WARNING, get_class( $this ) );
+            throw new Exception( 'You need to provide a correct Orion\Core\Model before using addField()', E_WARNING, get_class( $this ) );
 
         if ( array_key_exists( $fieldname, $this->fields ) )
             throw new Exception( 'Duplicate field [' . Core\Security::preventInjection( $fieldname ) . '] during form creation.', E_WARNING, get_class( $this ) );
@@ -198,7 +197,7 @@ class Form
     /**
      * Removes a registered field
      * @param string $fieldname 
-     * @return OrionForm instance
+     * @return Orion\Core\Form instance
      */
     public function &remove( $fieldname )
     {
@@ -275,8 +274,8 @@ class Form
     }
 
     /**
-     * Bind an OrionModel to the form
-     * @param OrionModel $_model
+     * Bind an Orion\Core\Model to the form
+     * @param Orion\Core\Model $_model
      */
     public function setModel( $_model )
     {
@@ -285,7 +284,7 @@ class Form
 
     /**
      * Get bound model
-     * @return OrionModel
+     * @return Orion\Core\Model
      */
     public function getModel()
     {
@@ -295,13 +294,17 @@ class Form
     /**
      * Get a field
      * @param string $name
-     * @return OrionFormField
+     * @return \Orion\Form\Field
      */
     public function &getField( $name )
     {
         return $this->fields[ $name ];
     }
 
+    /**
+     * Tests if the form requires multipart encoding
+     * @return Boolean
+     */
     public function isMultipart()
     {
         foreach ( $this->fields as $field )

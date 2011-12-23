@@ -1,10 +1,11 @@
 <?php
 /**
- * jQuery plugin class.
+ * RESTful plugin for Orion.
  *
+ * Ease PHP to Javascript variables transfers and js class includes.
+ * 
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 1.0
  */
 namespace Orion\Plugins;
 
@@ -16,13 +17,13 @@ class RESTful
 
     /**
      *
-     * @var OrionRenderer
+     * @var \Orion\Core\Renderer
      */
     private static $TPL = null;
     public static $path;
 
     /**
-     * Adds default JS variables to current document (like module path, module URI, and vars)
+     * Loads the RESTful plugin
      * @param mixed $args must contain a 'tpl' key with the current template object 
      * and can contain :
      *      a 'vars' key with an associative array to pass variables to JS, 
@@ -38,7 +39,7 @@ class RESTful
         $vars = '';
         if(is_array($args['vars']) && !empty($args['vars']))
             foreach($args['vars'] as $key => $val)
-                $vars .= ','.$key.':"'.$val.'"';
+                $vars .= ','.$key.':'.(is_string($val) ? '"'.$val.'"' : json_encode($val));
         
         $script = '<script type="text/javascript">
                 //<![CDATA[
@@ -49,6 +50,6 @@ class RESTful
         
         if(is_array($args['include']) && !empty($args['include']))
             foreach($args['include'] as $js)
-                self::$TPL->includeJS(Core\Context::getModuleAbsolutePath().$js);
+                self::$TPL->includeJS($js);
     }
 }

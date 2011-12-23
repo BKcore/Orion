@@ -1,11 +1,10 @@
 <?php
 /**
- * Orion SmartyRenderer class.
+ * \Orion\Renderers\Smarty class.
  * Creates a standard Smarty instance
  *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.2.11
+ * @version 1.0
  */
  
 namespace Orion\Renderers;
@@ -16,7 +15,7 @@ use \Orion\Core;
 
 class Smarty extends \Smarty implements Core\Renderer\Base
 {
-    private $HTML_C_TAG = ''; // set this to '' if HTML output instead of xHTML
+    // private $HTML_C_TAG = ''; // set this to '' if HTML output instead of xHTML
 
     private $js = array();
     private $css = array();
@@ -32,13 +31,13 @@ class Smarty extends \Smarty implements Core\Renderer\Base
         $this->config_dir   = \Orion::base() . \Orion::RENDERER_PATH.'smarty/configs/';
         $this->cache_dir    = \Orion::base() . \Orion::RENDERER_PATH.'smarty/cache/';
 
-        $this->caching = \Smarty::CACHING_LIFETIME_CURRENT;
+        $this->caching = \Smarty::CACHING_LIFETIME_SAVED;
         $this->cache_lifetime = 3600;
 
         $this->disableSecurity();
         
         $this->compile_check = false;
-        $this->debugging = true;
+        $this->debugging = false;
         
         $this->force_compile = false;
     }
@@ -106,6 +105,7 @@ class Smarty extends \Smarty implements Core\Renderer\Base
             $array[ 'module' ][ 'path' ] = \Orion\Core\Context::getModulePath();
             $array[ 'module' ][ 'url' ] = \Orion\Core\Context::getModuleURL( \Orion::module()->getName() );
             $array[ 'module' ][ 'uri' ] = \Orion\Core\Context::getModuleURI();
+            $array[ 'module' ][ 'fulluri' ] = \Orion\Core\Context::getFullURI();
             $array[ 'template' ] = array( );
             $array[ 'template' ][ 'name' ] = \Orion::module()->getTemplate();
             $array[ 'template' ][ 'path' ] = \Orion\Core\Context::getTemplatePath( \Orion::module()->getTemplate() );
@@ -117,6 +117,13 @@ class Smarty extends \Smarty implements Core\Renderer\Base
             $array[ 'author' ] = \Orion::config()->get( 'SITE_AUTHOR' );
             $array[ 'baseurl' ] = \Orion::config()->get( 'BASE_URL' );
             $array[ 'mode' ] = \Orion::getMode();
+            $array[ 'logged' ] = \Orion\Core\Auth::logged() ? 'yes' : 'no';
+            if(\Orion\Core\Auth::user() != null)
+            {
+                $array[ 'user' ] = array();
+                $array[ 'user' ][ 'login' ] = \Orion\Core\Auth::user()->login;
+                $array[ 'user' ][ 'hasadmin' ] = \Orion\Core\Auth::user()->is('moderator', true);
+            }
         } catch ( Exception $e )
         {
             $array[ 'error' ] = 'Unable to retreive all data.';

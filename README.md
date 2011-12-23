@@ -1,18 +1,40 @@
-#Orion PHP5 Framework
+# Orion, the PHP5 Framework
 
-* [Website](http://orion.bkcore.com)
-* Author: Thibaut Despoulain
-* Version: 0.11.10-alpha4
-* License: BSD 4-clauses
+Intro
 
-##News
+## Wesbite
 
-* We're nearing the beta milestone !
+[OrionPHP.org](http://orionphp.org)
 
-##Warning
+## Download
 
-This is an early alpha version, use it at your own risks. This version is made for testing purpose only and may even not work "as-is" !
+[Download this framework](http://orionphp.org/download.html)
 
-##Description
+## Installation
 
-Orion is a lightweight PHP5 web framework designed for small to medium scale websites and applications.
+[Getting started with Orion](http://orionphp.org/doc/getting-started.html)
+
+## License
+
+Orion is open source, released under the MIT License.
+
+	Copyright (C) 2010-2012 Thibaut Despoulain
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of
+	this software and associated documentation files (the "Software"), to deal in
+	the Software without restriction, including without limitation the rights to
+	use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+	of the Software, and to permit persons to whom the Software is furnished to do
+	so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+

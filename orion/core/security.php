@@ -1,20 +1,23 @@
 <?php
 
+namespace Orion\Core;
+
+
 /**
+ * \Orion\Core\Security
+ * 
  * Orion security class.
  * 
  * Contains security-related methods, like password generator,
  * Injection escape, hashing, validation, etc.
  *
+ * This class is part of Orion, the PHP5 Framework (http://orionphp.org/).
+ *
  * @author Thibaut Despoulain
- * @license BSD 4-clauses
- * @version 0.10.11
+ * @version 0.11.12
  *
  * @static
  */
-
-namespace Orion\Core;
-
 class Security
 {
     const E_INVALID_JSON = 81;
@@ -32,9 +35,24 @@ class Security
     {
         try
         {
+            if ( !isset( $_SESSION[ 'csrf_' . $key ] ) )
+                throw new \Exception( 'Missing CSRF session token.' );
+
+            if ( !isset( $origin[ $key ] ) )
+                throw new \Exception( 'Missing CSRF form token.' );
+
+            // Get valid token from session
             $hash = $_SESSION[ 'csrf_' . $key ];
+            // Free up session token for one-time CSRF token usage.
+            $_SESSION[ 'csrf_' . $key ] = null;
+
+            // Check if session token matches form token
             if ( $origin[ $key ] != $hash )
-                throw new Exception( 'CSRF Token mismatch.' );
+                throw new \Exception( 'Invalid CSRF token.' );
+
+            // Check for token expiration
+            if ( $timespan != null && is_int( $timespan ) && intval( substr( base64_decode( $hash ), 0, 10 ) ) + $timespan < time() )
+                throw new \Exception( 'CSRF token has expired.' );
         }
         catch ( \Exception $e )
         {
@@ -49,7 +67,9 @@ class Security
      */
     public static function csrfGenerate( $key )
     {
-        $token = self::md5Hash( self::genPassword( 8 ) . time() );
+        // token generation (basically base64_encode any random complex string, time() is used for token expiration) 
+        $token = base64_encode( time() . self::genPassword( 32 ) );
+        // store the one-time token in session
         $_SESSION[ 'csrf_' . $key ] = $token;
 
         return $token;
@@ -90,6 +110,7 @@ class Security
         {
             $localConfig[ 'safe' ] = 1;
             $localConfig[ 'deny_attribute' ] = 'style';
+            $localConfig[ 'balance' ] = 0;
         }
         if ( $config != null && is_array( $config ) )
             array_merge( $localConfig, $config );
@@ -139,10 +160,36 @@ class Security
     public static function saltedHash( $data, $extrasalt )
     {
         $password = str_split( $data, (strlen( $data ) / 2) + 1 );
-        $hash = hash( 'sha1', $extrasalt . $password[ 0 ] . \Orion::config()->get('SECURITY_KEY') . $password[ 1 ] );
+        $hash = hash( 'sha1', $extrasalt . $password[ 0 ] . \Orion::config()->get( 'SECURITY_KEY' ) . $password[ 1 ] );
         return $hash;
     }
 
+    /**
+     * Removes risky parts from a standard file path (., .., empty) and normalise directory separators
+     * @param string $path
+     * @return string
+     */
+    public static function sanitizePath( $path )
+    {
+        $path = str_replace( array( '\\', '/' ), array( DS, DS ), $path );
+        $p = explode( DS, $path );
+        $out = $path{0} == DS ? array( '' ) : array( );
+        foreach ( $p as $dir )
+        {
+            if ( $dir == '' || $dir == '.' || $dir == '..' )
+                continue;
+
+            $out[ ] = $dir;
+        }
+        return implode( DS, $out );
+    }
+
+    /**
+     * Test if given filename uses on of the given extentions.
+     * @param string $string The file name
+     * @param string|string[] $ext The extention(s) (without the .)
+     * @return boolean
+     */
     public static function validateExtension( $string, $ext )
     {
         if ( is_string( $ext ) )
@@ -151,6 +198,11 @@ class Security
         return (preg_match( '/\.(?:' . implode( '|', $ext ) . ')$/six', $string ) > 0);
     }
 
+    /**
+     * Validates a JSON string.
+     * @param string $data The json-encoded data
+     * @return boolean
+     */
     public static function validateJSON( $data )
     {
         $jsonregex = '/
