@@ -33,7 +33,7 @@ class DB
             $dbClass = '\\Orion\\Core\\DB\\' . ucfirst( strtolower( \Orion::config()->get( 'DB_TYPE' ) ) );
             return $dbClass::getConnection();
         }
-        catch ( Exception $e )
+        catch ( \Exception $e )
         {
             throw new Exception( 'Unable to load DB class for [' . \Orion::config()->get( 'DB_TYPE' ) . '] database type.', E_ERROR, get_class() );
         }
@@ -53,7 +53,7 @@ class DB
             $dbClass = 'DB\\' . ucfirst( strtolower( \Orion::config()->get( 'DB_TYPE' ) ) );
             return $dbClass::disconnect();
         }
-        catch ( Exception $e )
+        catch ( \Exception $e )
         {
             throw new Exception( 'Unable to load DB class for [' . \Orion::config()->get( 'DB_TYPE' ) . '] database type.', E_ERROR, get_class() );
         }
